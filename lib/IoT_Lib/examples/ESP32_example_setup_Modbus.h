@@ -12,9 +12,9 @@
 /*=========================
     MODBUS CONFIGURATION
 =========================*/
-#define RX_ 16          // RX pin of RS485 Module
-#define TX_ 17          // TX pin of RS485 Module
-#define BAUD_RATE 9600  // Modbus baudrate
+#define RX_ 16         // RX pin of RS485 Module
+#define TX_ 17         // TX pin of RS485 Module
+#define BAUD_RATE 9600 // Modbus baudrate
 
 float Humidity = 0;
 float Temperature = 0;
@@ -27,10 +27,10 @@ void readSensor()
     uint16_t DATA[2];
 
     int RS = TZModbus.readHoldingRegisterValue(
-        1,       // Slave ID
-        0x0000,  // Start Register
-        2,       // Number of Registers
-        DATA);   // Return Buffer
+        1,      // Slave ID
+        0x0000, // Start Register
+        2,      // Number of Registers
+        DATA);  // Return Buffer
 
     if (RS > 0)
     {

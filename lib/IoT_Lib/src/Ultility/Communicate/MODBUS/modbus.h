@@ -781,6 +781,6 @@ float ModbusESP32<Modbus>::RegToFloat(uint16_t reg1, uint16_t reg2)
     return data.f;
 }
 
-ModbusESP32<int> MODBUS;
+ModbusESP32<int> TZModbus;
 
 #endif

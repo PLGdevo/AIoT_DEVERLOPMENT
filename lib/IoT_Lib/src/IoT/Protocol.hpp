@@ -2,7 +2,7 @@
 #define INC_IoT_PROTOCOL_HPP_
 
 #include <IoT/DEBUG.hpp>
-#include <WiFi/IoT_PnP_ESP32.hpp>
+#include <WiFi/TZIoT_PnP_ESP32.hpp>
 
 class PROTOCOL
 {
@@ -193,5 +193,5 @@ void PROTOCOL::run()
     this->timeEvented();
 }
 
-PROTOCOL IoT;
+PROTOCOL TZIoT;
 #endif /*INC_IoT_PROTOCAL_HPP_*/
