@@ -1,0 +1,197 @@
+#ifndef INC_IoT_PROTOCOL_HPP_
+#define INC_IoT_PROTOCOL_HPP_
+
+#include <IoT/DEBUG.hpp>
+#include <WiFi/IoT_PnP_ESP32.hpp>
+
+class PROTOCOL
+{
+private:
+    PnP<MQTTESP32<PubSubClient>> PNP;
+    MQTTESP32<PubSubClient> serverMQTT;
+    API API_MESS;
+    cJSON *tele_root = NULL;
+    cJSON *dataObj_tele = NULL;
+    cJSON *control_root = NULL;
+    cJSON *dataObj_control = NULL;
+    unsigned long IoT_time, IoT_set_time;
+
+public:
+    PROTOCOL();
+    ~PROTOCOL();
+    void begin(const char *sta_ssid, const char *sta_pass);
+    void begin(const char *sta_ssid, const char *sta_pass, const char *mqtt_id, const char *mqtt_auth);
+    void run();
+
+    template <typename... Args>
+    void setTelemetry(Args... args);
+    template <typename... Args>
+    void setControl(Args... args);
+
+    void writeControl(const char *key, const Param value);
+    void writeTelemetry(const char *key, const Param value);
+    int addTimeEvent(unsigned long time, void (*callback)());
+    void timeEvented();
+    void (*_timerCallback)() = NULL;
+};
+
+PROTOCOL::PROTOCOL(/* args */)
+{
+}
+
+PROTOCOL::~PROTOCOL()
+{
+}
+
+void PROTOCOL::begin(const char *sta_ssid, const char *sta_pass)
+{
+    this->PNP.begin(sta_ssid, sta_pass);
+}
+void PROTOCOL::begin(const char *sta_ssid, const char *sta_pass, const char *mqtt_userName, const char *mqtt_pass)
+{
+    this->PNP.begin(sta_ssid, sta_pass, mqtt_userName, mqtt_pass);
+}
+
+void PROTOCOL::timeEvented()
+{
+    unsigned long now = millis();
+
+    if (now - IoT_time >= IoT_set_time)
+    {
+        IoT_time = now;
+
+        if (_timerCallback != NULL)
+        {
+            _timerCallback();
+        }
+    }
+}
+
+int PROTOCOL::addTimeEvent(unsigned long time, void (*callback)())
+{
+    IoT_set_time = time;
+    IoT_time = millis();
+    _timerCallback = callback;
+    return 1;
+}
+
+template <typename... Args>
+void PROTOCOL::setControl(Args... args)
+{
+    if (control_root == NULL)
+    {
+        control_root = cJSON_CreateObject();
+        dataObj_control = cJSON_CreateObject();
+
+        char macStr[18];
+        WiFi.macAddress().toCharArray(macStr, sizeof(macStr));
+        cJSON_AddStringToObject(control_root, "mac_address", macStr);
+        cJSON_AddItemToObject(control_root, "data", dataObj_control);
+    }
+    else
+    {
+        cJSON_DeleteItemFromObject(control_root, "data");
+        dataObj_control = cJSON_CreateObject();
+        cJSON_AddItemToObject(control_root, "data", dataObj_control);
+    }
+
+    const char *keys[] = {args...};
+
+    constexpr size_t count = sizeof...(args);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        if (keys[i] == nullptr)
+            continue;
+
+        cJSON_AddNumberToObject(
+            dataObj_control,
+            keys[i],
+            0);
+    }
+
+    char buffer[256];
+
+    if (cJSON_PrintPreallocated(control_root, buffer, sizeof(buffer), 0))
+    {
+        LOG_DEBUG("SET_TELE", "%s", buffer);
+
+        API_MESS.Set_control(buffer);
+    }
+    else
+    {
+        LOG_ERROR("SET_TELE", "Buffer too small!");
+    }
+}
+
+template <typename... Args>
+void PROTOCOL::setTelemetry(Args... args)
+{
+    if (tele_root == NULL)
+    {
+        tele_root = cJSON_CreateObject();
+        dataObj_tele = cJSON_CreateObject();
+
+        char macStr[18];
+        WiFi.macAddress().toCharArray(macStr, sizeof(macStr));
+        cJSON_AddStringToObject(tele_root, "mac_address", macStr);
+        cJSON_AddItemToObject(tele_root, "data", dataObj_tele);
+    }
+    else
+    {
+        cJSON_DeleteItemFromObject(tele_root, "data");
+        dataObj_tele = cJSON_CreateObject();
+        cJSON_AddItemToObject(tele_root, "data", dataObj_tele);
+    }
+
+    const char *keys[] = {args...};
+
+    constexpr size_t count = sizeof...(args);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        if (keys[i] == nullptr)
+            continue;
+
+        cJSON_AddNumberToObject(dataObj_tele, keys[i], 0);
+    }
+
+    char buffer[256];
+
+    if (cJSON_PrintPreallocated(tele_root, buffer, sizeof(buffer), 0))
+    {
+        LOG_DEBUG("SET_TELE", "%s", buffer);
+        API_MESS.Set_telemetry(buffer);
+    }
+    else
+    {
+        LOG_ERROR("SET_TELE", "Buffer too small!");
+    }
+}
+
+void PROTOCOL::writeControl(const char *key, const Param value)
+{
+    if ((WiFi.status() == WL_CONNECTED) && this->serverMQTT.check_connect())
+    {
+        const char *data_control = this->API_MESS.WriteControl(key, value);
+        serverMQTT.PublishData_control(data_control);
+    }
+}
+
+void PROTOCOL::writeTelemetry(const char *key, const Param value)
+{
+    if ((WiFi.status() == WL_CONNECTED) && this->serverMQTT.check_connect())
+    {
+        const char *data = this->API_MESS.WriteTelemetry(key, value);
+        serverMQTT.PublishData_tele(data);
+    }
+}
+
+void PROTOCOL::run()
+{
+    this->PNP.run();
+    this->timeEvented();
+}
+
+PROTOCOL IoT;
+#endif /*INC_IoT_PROTOCAL_HPP_*/
