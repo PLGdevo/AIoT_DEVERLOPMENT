@@ -1,69 +1,25 @@
-/*
- * TZIoT Example
- * Example: Setup MODBUS + Communicate MODBUS
- * Designed by TZ
- */
-
 #define DEBUG_COLOR
 #define BUTTON_CONFIG
 
 #include <TZIoT.h>
 
-/*=========================
-    MODBUS CONFIGURATION
-=========================*/
-#define RX_ 16          // RX pin of RS485 Module
-#define TX_ 17          // TX pin of RS485 Module
-#define BAUD_RATE 9600  // Modbus baudrate
+const char *WIFI_SSID = "YOUR_WIFI_NAME";
+const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
 
-float Humidity = 0;
-float Temperature = 0;
-
-/*=========================
-    READ SENSOR
-=========================*/
-void readSensor()
-{
-    uint16_t DATA[2];
-
-    int RS = TZModbus.readHoldingRegisterValue(
-        1,       // Slave ID
-        0x0000,  // Start Register
-        2,       // Number of Registers
-        DATA);   // Return Buffer
-
-    if (RS > 0)
-    {
-        Humidity = DATA[0] / 10.0;
-        Temperature = DATA[1] / 10.0;
-
-        Serial.println("Humidity: " + String(Humidity) + " %");
-        Serial.println("Temperature: " + String(Temperature) + " C");
-    }
-    else
-    {
-        Serial.print("MODBUS ERROR: ");
-        Serial.println(RS);
-    }
-}
+const char *MQTT_USER = "YOUR_MQTT_USERNAME";
+const char *MQTT_PASS = "YOUR_MQTT_PASSWORD";
 
 void setup()
 {
     Serial.begin(115200);
-
-    TZModbus.beginModbus(
-        Serial2,
-        BAUD_RATE,
-        RX_,
-        TX_,
-        SERIAL_8N1);
-
-    Serial.println("MODBUS START");
+    TZIoT.begin(
+        WIFI_SSID,
+        WIFI_PASS,
+        MQTT_USER,
+        MQTT_PASS);
 }
 
 void loop()
 {
-    readSensor();
-
-    delay(1000);
+    TZIoT.run();
 }
