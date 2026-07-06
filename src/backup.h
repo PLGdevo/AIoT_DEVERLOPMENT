@@ -2,6 +2,8 @@
 #define BUTTON_CONFIG
 #include <TZIoT.h>
 #include <TZ_KIT.h>
+#include <TZ_SCREEN.h>
+
 const char *WIFI_SSID = "MakerSpaceLab_2.4Ghz";
 const char *WIFI_PASS = "Maker2025";
 
@@ -19,7 +21,6 @@ void ledWiFi()
         digitalWrite(Statusled, LOW);
     }
 }
-
 int programButton_ENTER_BACK()
 {
     static bool lastStateButton = LOW;
@@ -72,9 +73,7 @@ int programButton_UP_DOWN()
     }
     return 0;
 }
-
 // PROGRAM SCREEN BY FUNCTION
-#include <TZ_SCREEN.h>
 void programScreen()
 {
     static bool startup = true;
@@ -95,7 +94,49 @@ void programScreen()
     }
     if (!startup)
     {
-        SCREEN();
+        switch (functionScreen)
+        {
+        case 0:
+            programScreenMenu();
+            break;
+        case 2:
+            programScreenControl();
+            break;
+        case 3:
+            programScreenSensor();
+            break;
+        case 4:
+            programScreenOperate();
+            break;
+        case 5:
+            programScreenSystem();
+            break;
+        case 6:
+            programScreenAbout();
+            break;
+        case 21:
+            break;
+        case 22:
+            break;
+        case 23:
+            break;
+        case 24:
+            break;
+        case 31:
+            break;
+        case 32:
+            break;
+        case 41:
+            break;
+        case 42:
+            break;
+        case 43:
+            break;
+        case 44:
+            break;
+        default:
+            break;
+        }
     }
 }
 // PROGRAM SYSTEM BY FUNCTION

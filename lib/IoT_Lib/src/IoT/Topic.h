@@ -2,18 +2,18 @@
 #define INC_IoT_TopiC
 /*
 Topic format:
-    DEVICE/<MAC ESP>/<prefix topic>
+    device/<MAC ESP>/<prefix topic>
 */
-#define BASE_TOPIC "DEVICE/"
+#define BASE_TOPIC "device/"
 
 /* Subscribe topic */
-#define SUB_PREFIX_TELEMETRY_TOPIC "/TELEMETRY"
-#define SUB_PREFIX_CONTROL_TOPIC "/CONTROL"
-#define SUB_PREFIX_VIRTUAL_TOPIC "/VIRTUAL_PIN/"
+#define SUB_PREFIX_TELEMETRY_TOPIC "/telemetry"
+#define SUB_PREFIX_CONTROL_TOPIC "/control"
+#define SUB_PREFIX_VIRTUAL_TOPIC "/virtual_pin/"
 
 /* Publish topic */
-#define PUB_PREFIX_TELEMETRY_TOPIC "TELEMETRY"
-#define PUB_PREFIX_CONTROL_TOPIC "CONTROL"
-#define PUB_PREFIX_MODBUS_DATA_TOPIC "/DATA/"
+#define PUB_PREFIX_TELEMETRY_TOPIC "telemetry"
+#define PUB_PREFIX_CONTROL_TOPIC "control"
+#define PUB_PREFIX_MODBUS_DATA_TOPIC "/data/"
 
 #endif /*INC_IoT_TopiC*/

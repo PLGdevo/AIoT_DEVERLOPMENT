@@ -510,7 +510,6 @@ inline void PnP<Transport>::CONFIG_MQTT()
                  "   ██║    ███╔╝  ██║██║   ██║   ██║\r\n"
                  "   ██║   ███████╗██║╚██████╔╝   ██║\r\n"
                  "   ╚═╝   ╚══════╝╚═╝ ╚═════╝    ╚═╝\r\n"
-                 "\r\n"
                  "  TZIoT Firmware v0.0.1\r\n"
                  "  ESP32 IoT Controller\r\n");
         SaveMQTT(mqttusername, mqttpass);

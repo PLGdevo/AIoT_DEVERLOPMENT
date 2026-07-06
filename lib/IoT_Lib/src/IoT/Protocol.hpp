@@ -23,6 +23,8 @@ public:
     void begin(const char *sta_ssid, const char *sta_pass, const char *mqtt_id, const char *mqtt_auth);
     void run();
 
+    bool CheckConnect();
+
     template <typename... Args>
     void setTelemetry(Args... args);
     template <typename... Args>
@@ -184,6 +186,18 @@ void PROTOCOL::writeTelemetry(const char *key, const Param value)
     {
         const char *data = this->API_MESS.WriteTelemetry(key, value);
         serverMQTT.PublishData_tele(data);
+    }
+}
+
+bool PROTOCOL::CheckConnect()
+{
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 

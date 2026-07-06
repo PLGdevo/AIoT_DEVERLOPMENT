@@ -33,14 +33,14 @@ public:
     void UnpublishTopic(const char *baseTopic, const char *Topic_ne);
 
 private:
-    const char *MQTT_Server = "d9d730d3a5b7421f890ec828f179b081.s1.eu.hivemq.cloud";
+    const char *MQTT_Server = "mqtt.ait.caothang.edu.vn";
     const int16_t MQTT_PORT = 8883;
-    char MQTT_ID[21];
-    char MQTT_USERNAME[21];
-    char MQTT_PASS[21];
-    
+    char MQTT_ID[30];
+    char MQTT_USERNAME[30];
+    char MQTT_PASS[30];
+
     char MQTT_BASE_TOPIC[30] = BASE_TOPIC;
-    char _mac[21];
+    char _mac[30];
 
     unsigned long Time_connect_MQTT = 0;
     unsigned long Timeout_MQTT = 20000;
@@ -143,18 +143,22 @@ inline void MQTTESP32<MQTT>::begin()
         Time_connect_MQTT = 0;
         return;
     }
+    // Lấy MAC tại đây
+    String MAC = WiFi.macAddress();
+    strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
+    _mac[sizeof(_mac) - 1] = '\0';
+    strncpy(MQTT_ID, _mac, sizeof(MQTT_ID) - 1);
+    MQTT_ID[sizeof(MQTT_ID) - 1] = '\0';
     Time_connect_MQTT = millis();
     server.stop();
-    this->disconnect();
+    disconnect();
     vTaskDelay(pdMS_TO_TICKS(100));
     server.setInsecure();
     mqttClient.setServer(MQTT_Server, MQTT_PORT);
     mqttClient.setKeepAlive(10);
     mqttClient.setSocketTimeout(2);
     mqttClient.setCallback(IoT_Callback);
-    String MAC = WiFi.macAddress();
-    strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
-    _mac[sizeof(_mac) - 1] = '\0';
+    LOG_MQTT("MQTT", "CLIENT ID = %s", MQTT_ID);
     LOG_MQTT("MQTT", "CONNECTING TO SERVER.....");
     while (WiFi.status() == WL_CONNECTED && !mqttClient.connected() && (millis() - Time_connect_MQTT <= Timeout_MQTT))
     {
@@ -167,6 +171,11 @@ inline void MQTTESP32<MQTT>::begin()
             return;
         }
         LOG_MQTT("MQTT", "TRY CONNECT TO SERVER MQTT...");
+
+        LOG_MQTT("MQTT", "MQTT_ID: %s", MQTT_ID);
+        LOG_MQTT("MQTT", "MQTT_USER: %s", MQTT_USERNAME);
+        LOG_MQTT("MQTT", "MQTT_PASS: %s", MQTT_PASS);
+
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
     if (!mqttClient.connected())
