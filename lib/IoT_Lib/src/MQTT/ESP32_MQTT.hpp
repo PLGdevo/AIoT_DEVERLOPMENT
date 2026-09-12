@@ -53,6 +53,7 @@ void IoT_Callback(char *topic, byte *payload, unsigned int length)
         return;
     memcpy(msg, payload, length);
     msg[length] = '\0';
+    LOG_MQTT("MQTT_RECV", "[%s]: %s", topic, msg);
     API_MESS.handleMessage(topic, msg);
     free(msg);
 }
@@ -63,6 +64,7 @@ inline void MQTTESP32<MQTT>::SubscribeTopic(const char *baseTopic, const char *T
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s", baseTopic, Topic_ne);
     mqttClient.subscribe(NameTopic);
+    LOG_MQTT("MQTT_SUB", "Subscribed: %s", NameTopic);
 }
 template <class MQTT>
 inline void MQTTESP32<MQTT>::UnsubscribeTopic(const char *baseTopic, const char *Topic_ne)
@@ -89,14 +91,16 @@ inline void MQTTESP32<MQTT>::PublishData_tele(const char *data)
 {
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_TELEMETRY_TOPIC);
-    mqttClient.publish(NameTopic, data);
+    bool ok = mqttClient.publish(NameTopic, data);
+    LOG_MQTT("TELEMETRY", "PUBLISH -> [%s]: %s (status: %s)", NameTopic, data, ok ? "OK" : "FAIL");
 }
 template <class MQTT>
 inline void MQTTESP32<MQTT>::PublishData_control(const char *data)
 {
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_CONTROL_TOPIC);
-    mqttClient.publish(NameTopic, data);
+    bool ok = mqttClient.publish(NameTopic, data);
+    LOG_MQTT("CONTROL", "PUBLISH -> [%s]: %s (status: %s)", NameTopic, data, ok ? "OK" : "FAIL");
 }
 
 template <class MQTT>

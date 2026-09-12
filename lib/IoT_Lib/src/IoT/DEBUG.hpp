@@ -1,6 +1,10 @@
 #ifndef INC_DEBUG
 #define INC_DEBUG
 
+#ifndef DEBUG_COLOR
+#define DEBUG_COLOR
+#endif
+
 //======================================================
 // PLATFORM CHECK
 //======================================================
