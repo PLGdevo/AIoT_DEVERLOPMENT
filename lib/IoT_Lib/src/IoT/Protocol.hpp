@@ -177,6 +177,10 @@ void PROTOCOL::writeControl(const char *key, const Param value)
     {
         const char *data_control = this->API_MESS.WriteControl(key, value);
         serverMQTT.PublishData_control(data_control);
+        if (data_control != nullptr)
+        {
+            serverMQTT.PublishData_control(data_control);
+        }
     }
 }
 
@@ -186,6 +190,10 @@ void PROTOCOL::writeTelemetry(const char *key, const Param value)
     {
         const char *data = this->API_MESS.WriteTelemetry(key, value);
         serverMQTT.PublishData_tele(data);
+        if (data != nullptr)
+        {
+            serverMQTT.PublishData_tele(data);
+        }
     }
 }
 
