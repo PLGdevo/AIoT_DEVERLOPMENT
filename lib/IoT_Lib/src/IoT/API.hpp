@@ -4,7 +4,6 @@
 #ifndef INC_API_HPP_
 #define INC_API_HPP_
 
-#include <HTTPClient.h>
 #include <IoT/Topic.h>
 #include <Ultility/Param/cJSON.hpp>
 #include <IoT/Param.hpp>

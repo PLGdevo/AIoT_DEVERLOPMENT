@@ -8,7 +8,7 @@
 
 #include <IoT/API.hpp>
 #include <MQTT/ESP32_MQTT.hpp>
-#include <WiFI/CONFIG_UI.h>
+#include <WiFi/CONFIG_UI.h>
 
 #define WIFI_AP_Subnet IPAddress(255, 255, 255, 0)
 char STA_WIFI_NAME[32];
@@ -16,7 +16,7 @@ char STA_WIFI_PASS[32];
 #define STA_WIFI_PORT "80"
 
 #define AP_WIFI_NAME "TN_IoT: "
-#define AP_WIFI_PASS "IoT2106"
+#define AP_WIFI_PASS "IoT210605"
 #define AP_WIFI_IP "192.168.21.6"
 #define AP_WIFI_PORT "80"
 
@@ -296,14 +296,29 @@ inline void PnP<Transport>::resetCONFIGMODE()
 template <class Transport>
 inline void PnP<Transport>::handleSaveWiFi()
 {
-    newSSID = webServer.arg("ssid");
-    newPASS = webServer.arg("pass");
-    strcpy(_sta_ssid, newSSID.c_str());
-    strcpy(_sta_pass, newPASS.c_str());
+    String reqSSID = webServer.arg("ssid");
+    String reqPASS = webServer.arg("pass");
     String mqttUser = webServer.arg("mqtt_user");
     String mqttPass = webServer.arg("mqtt_pass");
-    SaveMQTT(mqttUser, mqttPass);
-    WiFi.disconnect();
+
+    if (reqSSID.length() > 0)
+    {
+        strncpy(_sta_ssid, reqSSID.c_str(), sizeof(_sta_ssid) - 1);
+        _sta_ssid[sizeof(_sta_ssid) - 1] = '\0';
+        strncpy(_sta_pass, reqPASS.c_str(), sizeof(_sta_pass) - 1);
+        _sta_pass[sizeof(_sta_pass) - 1] = '\0';
+        SaveWiFi(reqSSID, reqPASS);
+    }
+    if (mqttUser.length() > 0)
+    {
+        SaveMQTT(mqttUser, mqttPass);
+    }
+
+    webServer.send(200, "text/plain", "OK");
+    delay(500);
+    webServer.stop();
+    dnsServer.stop();
+    WiFi.mode(WIFI_STA);
     WiFi_STATE = MODE_STARTUP_STA;
 }
 
@@ -321,38 +336,43 @@ template <class Transport>
 inline void PnP<Transport>::handleScanWiFi()
 {
     WiFi.scanDelete();
-    delay(100);
     int n = WiFi.scanNetworks();
-    if (n <= 0)
-        return;
-    LOG_WIFI("WIFI", "Found %d networks", n);
-    int count = min(n, Scan_WiFi_MAX);
-    for (int i = 0; i < count; i++)
+    String json = "[";
+    if (n > 0)
     {
-        scan_ssid[i] = WiFi.SSID(i);
-        scan_rssi[i] = WiFi.RSSI(i);
+        int count = min(n, Scan_WiFi_MAX);
+        for (int i = 0; i < count; i++)
+        {
+            if (i > 0)
+                json += ",";
+            json += "{\"ssid\":\"" + WiFi.SSID(i) + "\",\"rssi\":" + String(WiFi.RSSI(i)) + "}";
+        }
     }
-    for (int i = count; i < Scan_WiFi_MAX; i++)
-    {
-        scan_ssid[i] = "";
-        scan_rssi[i] = 0;
-    }
+    json += "]";
     WiFi.scanDelete();
+    webServer.send(200, "application/json", json);
 }
 
 template <class Transport>
 inline void PnP<Transport>::ConfigPage()
 {
+    loadWiFi();
+    loadMQTT();
+    String curSSID = (saved_ssid[0].length() > 0) ? saved_ssid[0] : String(_sta_ssid);
+    String html = WebUI::ConfigPage(String(_mac), curSSID, String(_mqtt_username), String(_mqtt_pass));
+    webServer.send(200, "text/html", html);
 }
 
 template <class Transport>
 inline void PnP<Transport>::ConfigMQTTPage()
 {
+    ConfigPage();
 }
 
 template <class Transport>
 inline void PnP<Transport>::ConfigWiFiPage()
 {
+    ConfigPage();
 }
 
 //======================================================
@@ -365,11 +385,14 @@ inline void PnP<Transport>::begin(const char *sta_ssid, const char *sta_pass)
     WiFi.setSleep(false);
     WiFi.setTxPower(WIFI_POWER_19_5dBm);
     delay(500);
-    strcpy(_sta_ssid, sta_ssid);
-    strcpy(_sta_pass, sta_pass);
+    strncpy(_sta_ssid, sta_ssid, sizeof(_sta_ssid) - 1);
+    _sta_ssid[sizeof(_sta_ssid) - 1] = '\0';
+    strncpy(_sta_pass, sta_pass, sizeof(_sta_pass) - 1);
+    _sta_pass[sizeof(_sta_pass) - 1] = '\0';
     String MAC = WiFi.macAddress();
-    strcpy(_mac, MAC.c_str());
-    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s%s", _ap_ssid, _mac);
+    strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
+    _mac[sizeof(_mac) - 1] = '\0';
+    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s", AP_WIFI_NAME);
     LOG_WIFI("WIFI", "STA_WIFI_NAME: %s", _sta_ssid);
     LOG_WIFI("WIFI", "STA_WIFI_PASS: %s", _sta_pass);
     LOG_WIFI("WIFI", "STA_WIFI_IP: %s", _sta_ip);
@@ -384,13 +407,18 @@ inline void PnP<Transport>::begin(const char *sta_ssid, const char *sta_pass, co
     WiFi.setSleep(false);
     WiFi.setTxPower(WIFI_POWER_19_5dBm);
     delay(500);
-    strcpy(_sta_ssid, sta_ssid);
-    strcpy(_sta_pass, sta_pass);
-    strcpy(mqttusername, mqtt_username);
-    strcpy(mqttpass, mqtt_pass);
+    strncpy(_sta_ssid, sta_ssid, sizeof(_sta_ssid) - 1);
+    _sta_ssid[sizeof(_sta_ssid) - 1] = '\0';
+    strncpy(_sta_pass, sta_pass, sizeof(_sta_pass) - 1);
+    _sta_pass[sizeof(_sta_pass) - 1] = '\0';
+    strncpy(mqttusername, mqtt_username, sizeof(mqttusername) - 1);
+    mqttusername[sizeof(mqttusername) - 1] = '\0';
+    strncpy(mqttpass, mqtt_pass, sizeof(mqttpass) - 1);
+    mqttpass[sizeof(mqttpass) - 1] = '\0';
     String MAC = WiFi.macAddress();
-    strcpy(_mac, MAC.c_str());
-    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s%s", _ap_ssid, _mac);
+    strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
+    _mac[sizeof(_mac) - 1] = '\0';
+    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s", AP_WIFI_NAME);
     LOG_WIFI("WIFI", "STA_WIFI_NAME: %s", _sta_ssid);
     LOG_WIFI("WIFI", "STA_WIFI_PASS: %s", _sta_pass);
     LOG_WIFI("WIFI", "STA_WIFI_IP: %s", _sta_ip);
@@ -426,6 +454,7 @@ inline void PnP<Transport>::CONFIG_STA()
                 LOG_WIFI("WIFI", "CONNECTING....... %ds", (millis() - t1) / 1000);
                 t0 = millis();
             }
+            delay(10);
         }
         if (WiFi.status() == WL_CONNECTED)
         {
@@ -455,6 +484,7 @@ inline void PnP<Transport>::CONFIG_STA()
                 LOG_WIFI("WIFI", "CONNECTING....... %ds", (millis() - t1) / 1000);
                 t0 = millis();
             }
+            delay(10);
         }
         if (WiFi.status() == WL_CONNECTED)
         {
@@ -703,6 +733,13 @@ inline void PnP<Transport>::FAILD_MQTT()
 template <class Transport>
 inline void PnP<Transport>::FAILD_WIFI()
 {
+    static unsigned long lastFailTime = 0;
+    if (millis() - lastFailTime > 5000)
+    {
+        lastFailTime = millis();
+        LOG_WIFI("WIFI", "RETRYING STA CONNECTION...");
+        WiFi_STATE = MODE_LOST_CONNECT_WIFI;
+    }
 }
 
 //======================================================
@@ -726,6 +763,45 @@ inline void PnP<Transport>::CONFIG_AP()
     local_ip.fromString(_ap_ip);
     WiFi.softAPConfig(local_ip, local_ip, WIFI_AP_Subnet);
     WiFi.softAP(_ap_ssid, _ap_pass);
+
+    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+    dnsServer.start(53, "*", local_ip);
+
+    webServer.on("/", HTTP_GET, [this]()
+                 { this->ConfigPage(); });
+    webServer.on("/scan", HTTP_GET, [this]()
+                 { this->handleScanWiFi(); });
+    webServer.on("/save", HTTP_POST, [this]()
+                 { this->handleSaveWiFi(); });
+    webServer.on("/restart", HTTP_POST, [this]()
+                 {
+        webServer.send(200, "text/plain", "RESTARTING");
+        delay(500);
+        ESP.restart(); });
+    webServer.on("/reset", HTTP_POST, [this]()
+                 {
+        webServer.send(200, "text/plain", "RESETTING");
+        delay(500);
+        prefs.begin("wifi", false);
+        prefs.clear();
+        prefs.end();
+        prefs.begin("mqtt", false);
+        prefs.clear();
+        prefs.end();
+        ESP.restart(); });
+    // Captive Portal redirection
+    webServer.on("/generate_204", HTTP_GET, [this]()
+                 { this->ConfigPage(); });
+    webServer.on("/hotspot-detect.html", HTTP_GET, [this]()
+                 { this->ConfigPage(); });
+    webServer.on("/canonical.html", HTTP_GET, [this]()
+                 { this->ConfigPage(); });
+    webServer.onNotFound([this]()
+                         { this->ConfigPage(); });
+
+    webServer.begin();
+    LOG_WIFI("AP", "WEB CONFIG READY AT http://%s", _ap_ip);
+    WiFi_STATE = MODE_CONFIG;
 }
 
 //================ BUTTON ================//
@@ -778,6 +854,8 @@ inline void PnP<Transport>::run()
         break;
 
     case MODE_CONFIG:
+        dnsServer.processNextRequest();
+        webServer.handleClient();
         break;
 
     default:

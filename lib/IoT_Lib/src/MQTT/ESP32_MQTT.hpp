@@ -3,10 +3,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
-#include <WiFiClientSecure.h>
-#include <WiFiUdp.h>
-#include <MQTT/NPT_Client/NTPClient.h>
+#include <WiFiClient.h>
 #include <MQTT/PubSubClient/PubSubClient.h>
 #include <stdint.h>
 #include <IoT/API.hpp>
@@ -33,20 +30,20 @@ public:
     void UnpublishTopic(const char *baseTopic, const char *Topic_ne);
 
 private:
-    const char *MQTT_Server = "mqtt.ait.caothang.edu.vn";
-    const int16_t MQTT_PORT = 8883;
-    char MQTT_ID[30];
-    char MQTT_USERNAME[30];
-    char MQTT_PASS[30];
+    const char *MQTT_Server = "broker.hivemq.com";
+    const int16_t MQTT_PORT = 1883;
+    char MQTT_ID[64];
+    char MQTT_USERNAME[64] = "";
+    char MQTT_PASS[64] = "";
 
-    char MQTT_BASE_TOPIC[30] = BASE_TOPIC;
-    char _mac[30];
+    char MQTT_BASE_TOPIC[64] = BASE_TOPIC;
+    char _mac[32];
 
     unsigned long Time_connect_MQTT = 0;
     unsigned long Timeout_MQTT = 20000;
 };
 
-WiFiClientSecure server;
+WiFiClient server;
 PubSubClient mqttClient(server);
 MQTTESP32<PubSubClient> mqtt;
 
@@ -64,14 +61,14 @@ void IoT_Callback(char *topic, byte *payload, unsigned int length)
 template <class MQTT>
 inline void MQTTESP32<MQTT>::SubscribeTopic(const char *baseTopic, const char *Topic_ne)
 {
-    char NameTopic[100];
+    char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s", baseTopic, Topic_ne);
     mqttClient.subscribe(NameTopic);
 }
 template <class MQTT>
 inline void MQTTESP32<MQTT>::UnsubscribeTopic(const char *baseTopic, const char *Topic_ne)
 {
-    char NameTopic[100];
+    char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s", baseTopic, Topic_ne);
     mqttClient.unsubscribe(NameTopic);
 }
@@ -80,7 +77,7 @@ inline void MQTTESP32<MQTT>::UnsubscribeTopic(const char *baseTopic, const char 
 template <class MQTT>
 inline void MQTTESP32<MQTT>::PublishTopic(const char *baseTopic, const char *Topic_ne)
 {
-    char NameTopic[100];
+    char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s", baseTopic, Topic_ne);
 }
 template <class MQTT>
@@ -91,39 +88,36 @@ inline void MQTTESP32<MQTT>::UnpublishTopic(const char *baseTopic, const char *T
 template <class MQTT>
 inline void MQTTESP32<MQTT>::PublishData_tele(const char *data)
 {
-    char NameTopic[100];
-    snprintf(NameTopic, sizeof(NameTopic), "%s%s", BASE_TOPIC, PUB_PREFIX_TELEMETRY_TOPIC);
+    char NameTopic[128];
+    snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_TELEMETRY_TOPIC);
     mqttClient.publish(NameTopic, data);
 }
 template <class MQTT>
 inline void MQTTESP32<MQTT>::PublishData_control(const char *data)
 {
-    char NameTopic[100];
-    snprintf(NameTopic, sizeof(NameTopic), "%s%s", BASE_TOPIC, PUB_PREFIX_CONTROL_TOPIC);
+    char NameTopic[128];
+    snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_CONTROL_TOPIC);
     mqttClient.publish(NameTopic, data);
 }
 
 template <class MQTT>
 inline void MQTTESP32<MQTT>::config(const char *mqtt_userName, const char *mqtt_pass)
 {
-    strcpy(MQTT_USERNAME, mqtt_userName);
-    strcpy(MQTT_PASS, mqtt_pass);
+    strncpy(MQTT_USERNAME, mqtt_userName, sizeof(MQTT_USERNAME) - 1);
+    MQTT_USERNAME[sizeof(MQTT_USERNAME) - 1] = '\0';
+    strncpy(MQTT_PASS, mqtt_pass, sizeof(MQTT_PASS) - 1);
+    MQTT_PASS[sizeof(MQTT_PASS) - 1] = '\0';
     String MAC = WiFi.macAddress();
-    strcpy(_mac, MAC.c_str());
-    strcpy(MQTT_ID, _mac);
+    strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
+    _mac[sizeof(_mac) - 1] = '\0';
+    strncpy(MQTT_ID, _mac, sizeof(MQTT_ID) - 1);
+    MQTT_ID[sizeof(MQTT_ID) - 1] = '\0';
 }
 
 template <class MQTT>
 inline bool MQTTESP32<MQTT>::check_connect()
 {
-    if (mqttClient.connected())
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return mqttClient.connected();
 }
 
 template <class MQTT>
@@ -143,38 +137,50 @@ inline void MQTTESP32<MQTT>::begin()
         Time_connect_MQTT = 0;
         return;
     }
-    // Lấy MAC tại đây
-    String MAC = WiFi.macAddress();
-    strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
-    _mac[sizeof(_mac) - 1] = '\0';
-    strncpy(MQTT_ID, _mac, sizeof(MQTT_ID) - 1);
-    MQTT_ID[sizeof(MQTT_ID) - 1] = '\0';
+    // Tự sinh Client ID ngẫu nhiên nếu không sử dụng ID
+    if (strlen(MQTT_ID) == 0)
+    {
+        snprintf(MQTT_ID, sizeof(MQTT_ID), "ESP32_%04X%04X", (uint16_t)random(0xFFFF), (uint16_t)random(0xFFFF));
+    }
+    
     Time_connect_MQTT = millis();
     server.stop();
     disconnect();
     vTaskDelay(pdMS_TO_TICKS(100));
-    server.setInsecure();
     mqttClient.setServer(MQTT_Server, MQTT_PORT);
-    mqttClient.setKeepAlive(10);
+    mqttClient.setKeepAlive(15);
     mqttClient.setSocketTimeout(2);
     mqttClient.setCallback(IoT_Callback);
-    LOG_MQTT("MQTT", "CLIENT ID = %s", MQTT_ID);
-    LOG_MQTT("MQTT", "CONNECTING TO SERVER.....");
+    LOG_MQTT("MQTT", "ANONYMOUS CLIENT ID: %s", MQTT_ID);
+    LOG_MQTT("MQTT", "CONNECTING TO BROKER (%s:%d)...", MQTT_Server, MQTT_PORT);
     while (WiFi.status() == WL_CONNECTED && !mqttClient.connected() && (millis() - Time_connect_MQTT <= Timeout_MQTT))
     {
-        if (mqttClient.connect(MQTT_ID, MQTT_USERNAME, MQTT_PASS))
+        bool connected = false;
+        if (strlen(MQTT_USERNAME) > 0)
+        {
+            connected = mqttClient.connect(MQTT_ID, MQTT_USERNAME, MQTT_PASS);
+        }
+        else
+        {
+            // Kết nối hoàn toàn không cần ID / Username / Password (Anonymous mode)
+            connected = mqttClient.connect(MQTT_ID);
+        }
+
+        if (connected)
         {
             snprintf(MQTT_BASE_TOPIC, sizeof(MQTT_BASE_TOPIC), "%s%s", BASE_TOPIC, _mac);
             this->SubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_TELEMETRY_TOPIC);
             this->SubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_CONTROL_TOPIC);
-            LOG_MQTT("MQTT", "CONNECTED TO SERVER MQTT");
+            LOG_MQTT("MQTT", "CONNECTED TO BROKER SUCCESSFULLY");
             return;
         }
-        LOG_MQTT("MQTT", "TRY CONNECT TO SERVER MQTT...");
+        LOG_MQTT("MQTT", "TRY CONNECT TO SERVER...");
 
         LOG_MQTT("MQTT", "MQTT_ID: %s", MQTT_ID);
-        LOG_MQTT("MQTT", "MQTT_USER: %s", MQTT_USERNAME);
-        LOG_MQTT("MQTT", "MQTT_PASS: %s", MQTT_PASS);
+        if (strlen(MQTT_USERNAME) > 0)
+        {
+            LOG_MQTT("MQTT", "MQTT_USER: %s", MQTT_USERNAME);
+        }
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

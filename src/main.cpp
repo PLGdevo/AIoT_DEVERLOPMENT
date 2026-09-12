@@ -1,155 +1,83 @@
+#include <Arduino.h>
+
 #define DEBUG_COLOR
 #define BUTTON_CONFIG
+
 #include <TZIoT.h>
-#include <TZ_KIT.h>
+
+// ======================================================
+// 1. THÔNG TIN KẾT NỐI WIFI
+// ======================================================
 const char *WIFI_SSID = "MakerSpaceLab_2.4Ghz";
 const char *WIFI_PASS = "Maker2025";
 
-const char *MQTT_USER = "0309231068@caothang.edu.vn";
-const char *MQTT_PASS = "4dfAudwntoocVw6rJU7B";
+// Chân LED báo trạng thái hoặc Relay
+#define STATUS_LED_PIN 2
 
-void ledWiFi()
+// ======================================================
+// 2. NHẬN LỆNH ĐIỀU KHIỂN TỪ WEB UI / AI (MQTT)
+// ======================================================
+// Bắt sự kiện khi nhận lệnh điều khiển "relay1" hoặc "led"
+Virtual_WRITE(relay1)
 {
-    if (TZIoT.CheckConnect())
-    {
-        analogWrite(Statusled, 10);
-    }
-    else
-    {
-        digitalWrite(Statusled, LOW);
-    }
+    int state = param.getInt();
+    digitalWrite(STATUS_LED_PIN, state ? HIGH : LOW);
+    Serial.printf("[MQTT RECV] Relay/LED: %d\n", state);
+
+    // Phản hồi lại trạng thái xác nhận về Topic control
+    TZIoT.writeControl("relay1", state);
 }
 
-int programButton_ENTER_BACK()
+// ======================================================
+// 3. ĐỌC NHIỆT ĐỘ CHIP & THÔNG SỐ HỆ THỐNG GỬI LÊN BROKER
+// ======================================================
+void sendChipTelemetry()
 {
-    static bool lastStateButton = LOW;
-    static unsigned long timepressButton = 0;
-    static bool HoldDone = false;
-    static int eventButton = 0;
-    bool button = digitalRead(BUTTON2);
-    if (button == HIGH && lastStateButton == LOW)
+    if (!TZIoT.CheckConnect())
     {
-        timepressButton = millis();
-        HoldDone = false;
+        return; // Bỏ qua nếu chưa kết nối WiFi
     }
-    if (button == HIGH)
-    {
-        if (!HoldDone &&
-            millis() - timepressButton >= 2000)
-        {
-            HoldDone = true;
 
-            eventButton = 2;
-        }
-    }
-    if (button == LOW &&
-        lastStateButton == HIGH)
-    {
-        if (!HoldDone)
-        {
-            eventButton = 1;
-        }
-    }
-    lastStateButton = button;
-    int key = eventButton;
-    eventButton = 0;
-    return key;
-}
-int programButton_UP_DOWN()
-{
-    static unsigned long lastButton = 0;
-    if (millis() - lastButton < 200)
-        return 0;
-    if (digitalRead(BUTTON1))
-    {
-        lastButton = millis();
-        return 4; // UP
-    }
-    if (digitalRead(BUTTON3))
-    {
-        lastButton = millis();
-        return 3; // DOWN
-    }
-    return 0;
+    // 1. Đọc cảm biến nhiệt độ bên trong chip ESP32 (Đơn vị: °C)
+    float chipTemp = temperatureRead();
+
+    // 2. Đọc thêm các thông số hệ thống hữu ích
+    uint32_t freeRam = ESP.getFreeHeap();       // Dung lượng RAM còn trống (bytes)
+    int8_t wifiRssi = WiFi.RSSI();              // Cường độ sóng WiFi (dBm)
+    unsigned long uptimeSec = millis() / 1000;  // Thời gian chạy (giây)
+
+    Serial.println("\n--- [TELEMETRY UPDATE] ---");
+    Serial.printf("🌡️ Nhiet do chip ESP32: %.2f *C\n", chipTemp);
+    Serial.printf("💾 RAM trong (Free Heap): %u bytes\n", freeRam);
+    Serial.printf("📶 Tin hieu WiFi (RSSI): %d dBm\n", wifiRssi);
+    Serial.printf("⏱️ Thoi gian hoat dong: %lu s\n", uptimeSec);
+    Serial.println("--------------------------");
+
+    // 3. Đóng gói & gửi lên Topic: device/<MAC>/telemetry
+    TZIoT.writeTelemetry("chip_temp", chipTemp);
+    TZIoT.writeTelemetry("free_ram", (int)freeRam);
+    TZIoT.writeTelemetry("wifi_rssi", wifiRssi);
+    TZIoT.writeTelemetry("uptime", (int)uptimeSec);
 }
 
-// PROGRAM SCREEN BY FUNCTION
-#include <TZ_SCREEN.h>
-void programScreen()
-{
-    static bool startup = true;
-    static unsigned long timestart = 0;
-    if (startup)
-    {
-        if (timestart == 0)
-        {
-            timestart = millis();
-            Screen_CONNECT();
-        }
-        if (millis() - timestart < 1500)
-        {
-            return;
-        }
-        startup = false;
-        lcd.clear();
-    }
-    if (!startup)
-    {
-        SCREEN();
-    }
-}
-
-// PROGRAM SYSTEM BY FUNCTION
-void programSystem()
-{
-}
-
+// ======================================================
+// 4. SETUP & LOOP
+// ======================================================
 void setup()
 {
     Serial.begin(115200);
-    trans_Screen = 0;
-    Wire.begin(SDA_, SCL_);
-    lcd.init();
-    lcd.backlight();
-    Screen_STARTUP();
-    Serial1.begin(9600, SERIAL_8N1, RXD1, TXD1);
-    // Cài chân cho cảm biến
-    for (int i = 0; i < 4; i++)
-    {
-        pinMode(SENSOR[i], INPUT);
-        delay(200);
-    }
-    // Cài chân ngõ ra tải && Cấu hình PWM
-    for (int i = 0; i < 4; i++)
-    {
-        pinMode(OUT[i], OUTPUT);
-        digitalWrite(OUT[i], LOW);
-        delay(200);
-    }
-    // Cài nút bấm
-    for (int i = 0; i < 3; i++)
-    {
-        pinMode(BUTTON[i], INPUT);
-        delay(200);
-    }
-    pinMode(Statusled, OUTPUT);
-    digitalWrite(Statusled, LOW);
-    pinMode(Buzzer, OUTPUT);
-    digitalWrite(Buzzer, LOW);
+    pinMode(STATUS_LED_PIN, OUTPUT);
+    digitalWrite(STATUS_LED_PIN, LOW);
 
-    TZIoT.begin(WIFI_SSID, WIFI_PASS, MQTT_USER, MQTT_PASS);
-    TZModbus.beginModbus(Serial2, 4800, RXD2, TXD2, SERIAL_8N1);
-    TZModbus.setTimeout(1000);
+    // Khởi tạo và kết nối thư viện với WiFi & HiveMQ Broker
+    TZIoT.begin(WIFI_SSID, WIFI_PASS);
+
+    // Hẹn giờ tự động đọc và gửi nhiệt độ mỗi 3 giây (3000ms)
+    TZIoT.addTimeEvent(3000, sendChipTelemetry);
 }
+
 void loop()
 {
-    ledWiFi();
+    // Duy trì toàn bộ hoạt động của thư viện
     TZIoT.run();
-    timeprocess = millis();
-    if (timeprocess - lasttimeprocess >= 10)
-    {
-        lasttimeprocess = timeprocess;
-        programScreen();
-        programSystem();
-    }
 }
