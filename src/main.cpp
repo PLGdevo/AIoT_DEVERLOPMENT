@@ -8,8 +8,11 @@
 // ======================================================
 // 1. THÔNG TIN KẾT NỐI WIFI
 // ======================================================
-const char *WIFI_SSID = "MakerSpaceLab_2.4Ghz";
-const char *WIFI_PASS = "Maker2025";
+const char *WIFI_SSID = "";
+const char *WIFI_PASS = "";
+
+const char *MQTT_SSID = "";
+const char *MQTT_PASS = "";
 
 // Chân LED báo trạng thái hoặc Relay
 #define STATUS_LED_PIN 2
@@ -37,14 +40,18 @@ void sendChipTelemetry()
     {
         return; // Bỏ qua nếu chưa kết nối WiFi
     }
+    if (!serverMQTT.check_connect())
+    {
+        return; // Bỏ qua nếu chưa kết nối MQTT
+    }
 
     // 1. Đọc cảm biến nhiệt độ bên trong chip ESP32 (Đơn vị: °C)
     float chipTemp = temperatureRead();
 
     // 2. Đọc thêm các thông số hệ thống hữu ích
-    uint32_t freeRam = ESP.getFreeHeap();       // Dung lượng RAM còn trống (bytes)
-    int8_t wifiRssi = WiFi.RSSI();              // Cường độ sóng WiFi (dBm)
-    unsigned long uptimeSec = millis() / 1000;  // Thời gian chạy (giây)
+    uint32_t freeRam = ESP.getFreeHeap();      // Dung lượng RAM còn trống (bytes)
+    int8_t wifiRssi = WiFi.RSSI();             // Cường độ sóng WiFi (dBm)
+    unsigned long uptimeSec = millis() / 1000; // Thời gian chạy (giây)
 
     Serial.println("\n--- [TELEMETRY UPDATE] ---");
     Serial.printf("🌡️ Nhiet do chip ESP32: %.2f *C\n", chipTemp);
@@ -70,7 +77,7 @@ void setup()
     digitalWrite(STATUS_LED_PIN, LOW);
 
     // Khởi tạo và kết nối thư viện với WiFi & HiveMQ Broker
-    TZIoT.begin(WIFI_SSID, WIFI_PASS);
+    TZIoT.begin(WIFI_SSID, WIFI_PASS, MQTT_SSID, MQTT_PASS);
 
     // Hẹn giờ tự động đọc và gửi nhiệt độ mỗi 3 giây (3000ms)
     TZIoT.addTimeEvent(3000, sendChipTelemetry);
