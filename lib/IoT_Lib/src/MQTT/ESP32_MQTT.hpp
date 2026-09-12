@@ -153,33 +153,36 @@ inline void MQTTESP32<MQTT>::begin()
     // Cấu hình kết nối bảo mật TLS/SSL cho HiveMQ Cloud port 8883
     server.setInsecure(); // Bỏ qua xác thực chứng chỉ CA
     mqttClient.setServer(MQTT_Server, MQTT_PORT);
+    mqttClient.setBufferSize(512); // Đảm bảo buffer đủ chứa JSON telemetry
     mqttClient.setKeepAlive(15);
-    mqttClient.setSocketTimeout(3);
+    mqttClient.setSocketTimeout(5);
     mqttClient.setCallback(IoT_Callback);
 
-    LOG_MQTT("MQTT", "CONNECTING TO HIVEMQ CLOUD TLS (%s:%d)...", MQTT_Server, MQTT_PORT);
+    char clientId[32];
+    snprintf(clientId, sizeof(clientId), "ESP32_%08X", (uint32_t)ESP.getEfuseMac());
+
+    LOG_MQTT("MQTT", "CONNECTING TO HIVEMQ CLOUD (%s:%d)...", MQTT_Server, MQTT_PORT);
+    LOG_MQTT("MQTT", "CLIENT ID: %s | USER: %s", clientId, MQTT_USERNAME);
     while (WiFi.status() == WL_CONNECTED && !mqttClient.connected() && (millis() - Time_connect_MQTT <= Timeout_MQTT))
     {
-        // Kết nối chỉ dùng Username & Password với HiveMQ Cloud
-        bool connected = mqttClient.connect("", MQTT_USERNAME, MQTT_PASS);
+        // HiveMQ Cloud bắt buộc phải có Client ID (không được để chuỗi rỗng)
+        bool connected = mqttClient.connect(clientId, MQTT_USERNAME, MQTT_PASS);
 
         if (connected)
         {
             snprintf(MQTT_BASE_TOPIC, sizeof(MQTT_BASE_TOPIC), "%s%s", BASE_TOPIC, _mac);
             this->SubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_TELEMETRY_TOPIC);
             this->SubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_CONTROL_TOPIC);
-            LOG_MQTT("MQTT", "CONNECTED TO HIVEMQ CLOUD SUCCESSFULLY");
+            LOG_MQTT("MQTT", "CONNECTED TO HIVEMQ CLOUD SUCCESSFULLY!");
             return;
         }
-        LOG_MQTT("MQTT", "TRY CONNECT TO HIVEMQ CLOUD...");
-        LOG_MQTT("MQTT", "USER: %s", MQTT_USERNAME);
+        LOG_MQTT("MQTT", "TRYING TO CONNECT... (state=%d)", mqttClient.state());
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
     if (!mqttClient.connected())
     {
-        LOG_ERROR("MQTT", "CONNECT TIMEOUT OR FAILED");
-        LOG_ERROR("MQTT", "FAILED CONNECT, rc=%d", mqttClient.state());
+        LOG_ERROR("MQTT", "CONNECT TIMEOUT OR FAILED, rc=%d", mqttClient.state());
     }
 }
 
