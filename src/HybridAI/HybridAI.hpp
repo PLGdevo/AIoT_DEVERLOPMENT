@@ -37,7 +37,13 @@ public:
         _autoEmergencyActuation = enable;
     }
 
+    void setGeminiApiKey(const char *key)
+    {
+        gemini.setApiKey(key);
+    }
+
     EdgeAI::Engine edge;
+    CloudAI::GeminiClient gemini;
 
 private:
     bool _autoEmergencyActuation;
