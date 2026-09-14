@@ -71,3 +71,4 @@ if __name__ == "__main__":
     print("🚀 Đang khởi động AIoT Cloud AI Agent...")
     client.connect(MQTT_BROKER, MQTT_PORT, 60)
     client.loop_forever()
+

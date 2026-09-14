@@ -1,9 +1,8 @@
 #ifndef INC_DEBUG
 #define INC_DEBUG
 
-#ifndef DEBUG_COLOR
-#define DEBUG_COLOR
-#endif
+// Debug được bật khi người dùng định nghĩa DEBUG hoặc DEBUG_COLOR trước khi include AIoT.h
+// Để TẮT debug: Hãy comment hoặc bỏ dòng #define DEBUG_COLOR ở đầu sketch.
 
 //======================================================
 // PLATFORM CHECK
