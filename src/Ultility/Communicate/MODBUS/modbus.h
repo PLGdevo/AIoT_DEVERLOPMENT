@@ -73,12 +73,14 @@ private:
     // ================= DEBUG HEX =================
     void printHex(uint8_t *data, int len)
     {
+#if defined(MODBUS_DEBUG)
         for (int i = 0; i < len; i++)
         {
             Serial.printf("%02X ", data[i]);
         }
 
         Serial.println();
+#endif
     }
 
 public:

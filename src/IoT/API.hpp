@@ -350,7 +350,7 @@ void API::dowm(const char *payload)
     }
     else
     {
-        Serial.println("virtual_pins is not array");
+        LOG_WARN("API", "virtual_pins is not array");
     }
 
     cJSON_Delete(root);
