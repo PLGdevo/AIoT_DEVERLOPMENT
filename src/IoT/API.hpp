@@ -50,6 +50,8 @@ public:
     void virtualWrite(uint16_t pin, const Param &param);
     void Set_telemetry(const char *telemetry);
     void Set_control(const char *control);
+    void SetTelemetryValue(const char *key, const Param value);
+    const char *GetTelemetryJson();
     const char *WriteControl(const char *key, const Param value);
     const char *WriteTelemetry(const char *key, const Param value);
 
@@ -467,7 +469,7 @@ const char *API::WriteControl(const char *key, const Param value)
     }
 }
 
-const char *API::WriteTelemetry(const char *key, const Param value)
+void API::SetTelemetryValue(const char *key, const Param value)
 {
     if (!telemetry_root)
     {
@@ -518,21 +520,25 @@ const char *API::WriteTelemetry(const char *key, const Param value)
         break;
 
     default:
-        return nullptr;
+        return;
     }
 
     if (!newItem)
-        return nullptr;
+        return;
 
     cJSON *existing = cJSON_GetObjectItem(ObjectData, key);
-
     if (existing)
         cJSON_ReplaceItemInObject(ObjectData, key, newItem);
     else
         cJSON_AddItemToObject(ObjectData, key, newItem);
+}
+
+const char *API::GetTelemetryJson()
+{
+    if (!telemetry_root)
+        return nullptr;
 
     static char buffer[512];
-
     if (cJSON_PrintPreallocated(telemetry_root, buffer, sizeof(buffer), 0))
     {
         return buffer;
@@ -542,6 +548,12 @@ const char *API::WriteTelemetry(const char *key, const Param value)
         LOG_ERROR("TELEMETRY", "Buffer too small!");
         return nullptr;
     }
+}
+
+const char *API::WriteTelemetry(const char *key, const Param value)
+{
+    SetTelemetryValue(key, value);
+    return GetTelemetryJson();
 }
 
 void API::handler_data(const char *payload)

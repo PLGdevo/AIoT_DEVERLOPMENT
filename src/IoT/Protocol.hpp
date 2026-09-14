@@ -8,7 +8,6 @@ class AIoTProtocol
 {
 private:
     PnP<MQTTESP32<PubSubClient>> PNP;
-    MQTTESP32<PubSubClient> serverMQTT;
     API API_MESS;
     cJSON *tele_root = NULL;
     cJSON *dataObj_tele = NULL;
@@ -30,6 +29,10 @@ public:
     template <typename... Args>
     void setControl(Args... args);
 
+    void updateTelemetry(const char *key, const Param value);
+    void updateControl(const char *key, const Param value);
+    void sendTelemetry();
+    void sendControl();
     void writeControl(const char *key, const Param value);
     void writeTelemetry(const char *key, const Param value);
     int addTimeEvent(unsigned long time, void (*callback)());
@@ -168,6 +171,36 @@ void AIoTProtocol::setTelemetry(Args... args)
     else
     {
         LOG_ERROR("SET_TELE", "Buffer too small!");
+    }
+}
+
+void AIoTProtocol::updateTelemetry(const char *key, const Param value)
+{
+    this->API_MESS.SetTelemetryValue(key, value);
+}
+
+void AIoTProtocol::sendTelemetry()
+{
+    if ((WiFi.status() == WL_CONNECTED) && serverMQTT.check_connect())
+    {
+        const char *data = this->API_MESS.GetTelemetryJson();
+        if (data != nullptr)
+        {
+            serverMQTT.PublishData_tele(data);
+        }
+    }
+}
+
+void AIoTProtocol::updateControl(const char *key, const Param value)
+{
+    this->API_MESS.WriteControl(key, value);
+}
+
+void AIoTProtocol::sendControl()
+{
+    if ((WiFi.status() == WL_CONNECTED) && serverMQTT.check_connect())
+    {
+        // Gửi control hiện tại
     }
 }
 
