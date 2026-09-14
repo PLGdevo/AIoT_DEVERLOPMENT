@@ -71,9 +71,9 @@ static inline const char *FileName(const char *path)
 //======================================================
 
 #ifdef ESP32
-#define CKC_CORE_ID xPortGetCoreID()
+#define AIOT_CORE_ID xPortGetCoreID()
 #else
-#define CKC_CORE_ID 0
+#define AIOT_CORE_ID 0
 #endif
 
 //======================================================
@@ -96,7 +96,7 @@ static inline const char *FileName(const char *path)
                 "[%s]"                                         \
                 "[%s]: " msgColor format LOG_RESET "\n",       \
                 millis(),                                      \
-                CKC_CORE_ID,                                   \
+                AIOT_CORE_ID,                                  \
                 level,                                         \
                 FileName(__FILE__),                            \
                 __LINE__,                                      \

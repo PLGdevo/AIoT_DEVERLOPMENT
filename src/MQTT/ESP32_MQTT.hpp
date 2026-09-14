@@ -10,7 +10,7 @@
 #include <IoT/Param.hpp>
 
 template <class MQTT>
-class MQTTESP32
+class AIoT_MQTT_ESP32
 {
 public:
     void config(const char *mqtt_userName, const char *mqtt_pass);
@@ -42,11 +42,14 @@ private:
     unsigned long Timeout_MQTT = 20000;
 };
 
+template <class MQTT>
+using MQTTESP32 = AIoT_MQTT_ESP32<MQTT>;
+
 WiFiClientSecure server;
 PubSubClient mqttClient(server);
-MQTTESP32<PubSubClient> mqtt;
+AIoT_MQTT_ESP32<PubSubClient> mqtt;
 
-void IoT_Callback(char *topic, byte *payload, unsigned int length)
+void AIoT_Callback(char *topic, byte *payload, unsigned int length)
 {
     char *msg = (char *)malloc(length + 1);
     if (!msg)
@@ -59,7 +62,7 @@ void IoT_Callback(char *topic, byte *payload, unsigned int length)
 }
 
 template <class MQTT>
-inline void MQTTESP32<MQTT>::SubscribeTopic(const char *baseTopic, const char *Topic_ne)
+inline void AIoT_MQTT_ESP32<MQTT>::SubscribeTopic(const char *baseTopic, const char *Topic_ne)
 {
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s", baseTopic, Topic_ne);
@@ -67,7 +70,7 @@ inline void MQTTESP32<MQTT>::SubscribeTopic(const char *baseTopic, const char *T
     LOG_MQTT("MQTT_SUB", "Subscribed: %s", NameTopic);
 }
 template <class MQTT>
-inline void MQTTESP32<MQTT>::UnsubscribeTopic(const char *baseTopic, const char *Topic_ne)
+inline void AIoT_MQTT_ESP32<MQTT>::UnsubscribeTopic(const char *baseTopic, const char *Topic_ne)
 {
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s", baseTopic, Topic_ne);
@@ -76,18 +79,18 @@ inline void MQTTESP32<MQTT>::UnsubscribeTopic(const char *baseTopic, const char 
 
 /* Publish Topic */
 template <class MQTT>
-inline void MQTTESP32<MQTT>::PublishTopic(const char *baseTopic, const char *Topic_ne)
+inline void AIoT_MQTT_ESP32<MQTT>::PublishTopic(const char *baseTopic, const char *Topic_ne)
 {
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s", baseTopic, Topic_ne);
 }
 template <class MQTT>
-inline void MQTTESP32<MQTT>::UnpublishTopic(const char *baseTopic, const char *Topic_ne)
+inline void AIoT_MQTT_ESP32<MQTT>::UnpublishTopic(const char *baseTopic, const char *Topic_ne)
 {
 }
 
 template <class MQTT>
-inline void MQTTESP32<MQTT>::PublishData_tele(const char *data)
+inline void AIoT_MQTT_ESP32<MQTT>::PublishData_tele(const char *data)
 {
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_TELEMETRY_TOPIC);
@@ -95,7 +98,7 @@ inline void MQTTESP32<MQTT>::PublishData_tele(const char *data)
     LOG_MQTT("TELEMETRY", "PUBLISH -> [%s]: %s (status: %s)", NameTopic, data, ok ? "OK" : "FAIL");
 }
 template <class MQTT>
-inline void MQTTESP32<MQTT>::PublishData_control(const char *data)
+inline void AIoT_MQTT_ESP32<MQTT>::PublishData_control(const char *data)
 {
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_CONTROL_TOPIC);
@@ -104,7 +107,7 @@ inline void MQTTESP32<MQTT>::PublishData_control(const char *data)
 }
 
 template <class MQTT>
-inline void MQTTESP32<MQTT>::config(const char *mqtt_userName, const char *mqtt_pass)
+inline void AIoT_MQTT_ESP32<MQTT>::config(const char *mqtt_userName, const char *mqtt_pass)
 {
     if (mqtt_userName != NULL)
     {
@@ -122,13 +125,13 @@ inline void MQTTESP32<MQTT>::config(const char *mqtt_userName, const char *mqtt_
 }
 
 template <class MQTT>
-inline bool MQTTESP32<MQTT>::check_connect()
+inline bool AIoT_MQTT_ESP32<MQTT>::check_connect()
 {
     return mqttClient.connected();
 }
 
 template <class MQTT>
-inline void MQTTESP32<MQTT>::disconnect()
+inline void AIoT_MQTT_ESP32<MQTT>::disconnect()
 {
     snprintf(MQTT_BASE_TOPIC, sizeof(MQTT_BASE_TOPIC), "%s%s", BASE_TOPIC, _mac);
     this->UnsubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_TELEMETRY_TOPIC);
@@ -137,7 +140,7 @@ inline void MQTTESP32<MQTT>::disconnect()
 }
 
 template <class MQTT>
-inline void MQTTESP32<MQTT>::begin()
+inline void AIoT_MQTT_ESP32<MQTT>::begin()
 {
     if (WiFi.status() != WL_CONNECTED)
     {
@@ -160,7 +163,7 @@ inline void MQTTESP32<MQTT>::begin()
     mqttClient.setBufferSize(512); // Đảm bảo buffer đủ chứa JSON telemetry
     mqttClient.setKeepAlive(15);
     mqttClient.setSocketTimeout(5);
-    mqttClient.setCallback(IoT_Callback);
+    mqttClient.setCallback(AIoT_Callback);
 
     char clientId[32];
     snprintf(clientId, sizeof(clientId), "ESP32_%08X", (uint32_t)ESP.getEfuseMac());
@@ -191,11 +194,11 @@ inline void MQTTESP32<MQTT>::begin()
 }
 
 template <class MQTT>
-inline void MQTTESP32<MQTT>::run()
+inline void AIoT_MQTT_ESP32<MQTT>::run()
 {
     mqttClient.loop();
 }
 
-MQTTESP32<PubSubClient> serverMQTT;
+AIoT_MQTT_ESP32<PubSubClient> serverMQTT;
 
 #endif /*ESP32_MQTT_HPP*/

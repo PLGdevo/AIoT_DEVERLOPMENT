@@ -1,20 +1,9 @@
-🌐 TZIoT LIBRARY
-ESP32 Series • Node Project
-Developed by TZIoT
-📌 Introduction
-TZIoT LIBRARY is an IoT framework designed for ESP32 Series devices.
 # 🚀 AIoT Library (AIoT_Lib)
 
-Main goals:
-Fast Tools for Development IoT Node projects
-Modular architecture
-Easy integration with WiFi / MQTT / MODBUS
-Optimized for real-time communication
 <p align="center">
   <b>Framework AIoT & IoT Mã Nguồn Mở Hiệu Năng Cao Cho Các Dòng Vi Điều Khiển ESP32 & Đa Nền Tảng Cloud / AI</b>
 </p>
 
-⚠️ WARNING
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-ESP32%20%7C%20ESP32--S2%20%7C%20ESP32--S3%20%7C%20ESP32--C3%20%7C%20ESP32--C6-blue?style=for-the-badge&logo=espressif" alt="ESP32 Chips" />
   <img src="https://img.shields.io/badge/Framework-Arduino%20%7C%20PlatformIO-orange?style=for-the-badge&logo=platformio" alt="Framework" />
@@ -23,16 +12,11 @@ Optimized for real-time communication
   <img src="https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge" alt="License" />
 </p>
 
-🔴 For best real-time performance, avoid using delay() whenever possible.
-This library is designed around continuous execution (loop() + non-blocking tasks).
 ---
 
-Using long delays may reduce responsiveness, affect communication timing, and lower overall system performance.
-✅ Recommended alternatives:
-millis()
 ## 📖 1. Giới thiệu (Overview)
 
-**AIoT_Lib** (còn gọi là **TZIoT**) là một framework mã nguồn mở được thiết kế chuyên biệt cho việc xây dựng các nút mạng **AIoT (Artificial Intelligence of Things)** và **IoT công nghiệp**. 
+**AIoT_Lib** là một framework mã nguồn mở được thiết kế chuyên biệt cho việc xây dựng các nút mạng **AIoT (Artificial Intelligence of Things)** và **IoT công nghiệp**. 
 
 Thư viện đơn giản hóa tối đa quy trình kết nối phần cứng với máy chủ Cloud, cung cấp cơ chế bảo mật **MQTT TLS/SSL**, giao diện cấu hình mạng thông minh **Captive Portal Web UI**, quản lý truyền nhận dữ liệu qua định dạng **JSON chuẩn hóa**, và sẵn sàng kết nối trực tiếp với các mô hình **Generative AI** (như Google Gemini, ChatGPT) để điều khiển và phân tích dữ liệu theo thời gian thực.
 
@@ -107,6 +91,8 @@ framework = arduino
 monitor_speed = 115200
 upload_speed = 921600
 board_build.partitions = min_spiffs.csv
+lib_deps = 
+    https://github.com/ThangNguyen2106-dash/AIoT_DEVERLOPMENT.git
 build_flags = 
     -Os
     -ffunction-sections
@@ -114,7 +100,6 @@ build_flags =
     -Wl,--gc-sections
     -D DEBUG_COLOR
     -D DEBUG
-lib_extra_dirs = lib
 ```
 
 ### Dành cho Arduino IDE
@@ -129,7 +114,7 @@ lib_extra_dirs = lib
 ### 1️⃣ Khởi tạo & Quản lý vòng lặp
 
 ```cpp
-#include <AIoT.h> // hoặc <TZIoT.h>
+#include <AIoT.h>
 ```
 
 | Cú pháp API | Chức năng |
@@ -308,7 +293,7 @@ void setup()
     Serial.begin(115200);
 
     // Để trống SSID & Pass để ưu tiên đọc từ Flash NVS.
-    // Nếu chưa có, thiết bị sẽ phát AP: "TN_IoT: <MAC>" (IP: 192.168.21.6)
+    // Nếu chưa có, thiết bị sẽ phát AP: "AIoT: <MAC>" (IP: 192.168.21.6)
     AIoT.begin("", "");
 }
 

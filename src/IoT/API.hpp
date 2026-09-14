@@ -11,7 +11,8 @@
 
 #include <stdarg.h>
 
-DataHandler TECH;
+DataHandler AIoT_Data_Handler;
+#define TECH AIoT_Data_Handler
 
 typedef enum
 {
@@ -35,7 +36,7 @@ PinType_t parsePinType(const char *type)
     return PIN_UNKNOWN;
 }
 
-class API
+class AIoT_API
 {
 
 public:
@@ -70,7 +71,9 @@ private:
 #endif
 };
 
-void API::handleMessage(const char *topic, const char *payload)
+typedef AIoT_API API;
+
+void AIoT_API::handleMessage(const char *topic, const char *payload)
 {
 
     if (strncmp(topic, BASE_TOPIC, strlen(BASE_TOPIC)) != 0)
@@ -563,6 +566,8 @@ void API::handler_data(const char *payload)
 
     cJSON_Delete(root);
 }
-API API_MESS;
+
+typedef AIoT_API API;
+AIoT_API API_MESS;
 
 #endif /*INC_API_HPP_*/

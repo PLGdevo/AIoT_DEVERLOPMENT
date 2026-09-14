@@ -1,5 +1,5 @@
-#ifndef INC_CKC_Param
-#define INC_CKC_Param
+#ifndef INC_AIOT_PARAM
+#define INC_AIOT_PARAM
 #include <stdio.h>
 #include <stdint.h>
 #include <Arduino.h>

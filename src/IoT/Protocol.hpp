@@ -1,10 +1,10 @@
-#ifndef INC_IoT_PROTOCOL_HPP_
-#define INC_IoT_PROTOCOL_HPP_
+#ifndef INC_AIOT_PROTOCOL_HPP_
+#define INC_AIOT_PROTOCOL_HPP_
 
 #include <IoT/DEBUG.hpp>
-#include <WiFi/TZIoT_PnP_ESP32.hpp>
+#include <WiFi/AIoT_PnP_ESP32.hpp>
 
-class PROTOCOL
+class AIoTProtocol
 {
 private:
     PnP<MQTTESP32<PubSubClient>> PNP;
@@ -17,8 +17,8 @@ private:
     unsigned long IoT_time, IoT_set_time;
 
 public:
-    PROTOCOL();
-    ~PROTOCOL();
+    AIoTProtocol();
+    ~AIoTProtocol();
     void begin(const char *sta_ssid, const char *sta_pass);
     void begin(const char *sta_ssid, const char *sta_pass, const char *mqtt_id, const char *mqtt_auth);
     void run();
@@ -37,24 +37,24 @@ public:
     void (*_timerCallback)() = NULL;
 };
 
-PROTOCOL::PROTOCOL(/* args */)
+AIoTProtocol::AIoTProtocol(/* args */)
 {
 }
 
-PROTOCOL::~PROTOCOL()
+AIoTProtocol::~AIoTProtocol()
 {
 }
 
-void PROTOCOL::begin(const char *sta_ssid, const char *sta_pass)
+void AIoTProtocol::begin(const char *sta_ssid, const char *sta_pass)
 {
     this->PNP.begin(sta_ssid, sta_pass);
 }
-void PROTOCOL::begin(const char *sta_ssid, const char *sta_pass, const char *mqtt_userName, const char *mqtt_pass)
+void AIoTProtocol::begin(const char *sta_ssid, const char *sta_pass, const char *mqtt_userName, const char *mqtt_pass)
 {
     this->PNP.begin(sta_ssid, sta_pass, mqtt_userName, mqtt_pass);
 }
 
-void PROTOCOL::timeEvented()
+void AIoTProtocol::timeEvented()
 {
     unsigned long now = millis();
 
@@ -69,7 +69,7 @@ void PROTOCOL::timeEvented()
     }
 }
 
-int PROTOCOL::addTimeEvent(unsigned long time, void (*callback)())
+int AIoTProtocol::addTimeEvent(unsigned long time, void (*callback)())
 {
     IoT_set_time = time;
     IoT_time = millis();
@@ -78,7 +78,7 @@ int PROTOCOL::addTimeEvent(unsigned long time, void (*callback)())
 }
 
 template <typename... Args>
-void PROTOCOL::setControl(Args... args)
+void AIoTProtocol::setControl(Args... args)
 {
     if (control_root == NULL)
     {
@@ -127,7 +127,7 @@ void PROTOCOL::setControl(Args... args)
 }
 
 template <typename... Args>
-void PROTOCOL::setTelemetry(Args... args)
+void AIoTProtocol::setTelemetry(Args... args)
 {
     if (tele_root == NULL)
     {
@@ -171,7 +171,7 @@ void PROTOCOL::setTelemetry(Args... args)
     }
 }
 
-void PROTOCOL::writeControl(const char *key, const Param value)
+void AIoTProtocol::writeControl(const char *key, const Param value)
 {
     if ((WiFi.status() == WL_CONNECTED) && this->serverMQTT.check_connect())
     {
@@ -183,7 +183,7 @@ void PROTOCOL::writeControl(const char *key, const Param value)
     }
 }
 
-void PROTOCOL::writeTelemetry(const char *key, const Param value)
+void AIoTProtocol::writeTelemetry(const char *key, const Param value)
 {
     if ((WiFi.status() == WL_CONNECTED) && this->serverMQTT.check_connect())
     {
@@ -195,7 +195,7 @@ void PROTOCOL::writeTelemetry(const char *key, const Param value)
     }
 }
 
-bool PROTOCOL::CheckConnect()
+bool AIoTProtocol::CheckConnect()
 {
     if (WiFi.status() == WL_CONNECTED)
     {
@@ -207,12 +207,14 @@ bool PROTOCOL::CheckConnect()
     }
 }
 
-void PROTOCOL::run()
+void AIoTProtocol::run()
 {
     this->PNP.run();
     this->timeEvented();
 }
 
-PROTOCOL TZIoT;
-#define AIoT TZIoT
-#endif /*INC_IoT_PROTOCAL_HPP_*/
+typedef AIoTProtocol PROTOCOL;
+AIoTProtocol AIoT;
+#define TZIoT AIoT
+
+#endif /*INC_AIOT_PROTOCOL_HPP_*/

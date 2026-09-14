@@ -1,14 +1,13 @@
 /*
-
-TZIoT Example
+AIoT Example
 Example: Setup WiFi + MQTT Connection
-Designed by TZIoT
+Designed by AIoT
 */
 
 #define DEBUG_COLOR
 #define BUTTON_CONFIG
 
-#include <TZIoT.h>
+#include <AIoT.h>
 
 //=========================//
 //    WIFI CONFIGURATION  //
@@ -26,8 +25,8 @@ void setup()
 {
     Serial.begin(115200);
 
-    // Initialize TZIoT
-    TZIoT.begin(
+    // Initialize AIoT
+    AIoT.begin(
         WIFI_SSID,
         WIFI_PASS,
         MQTT_USER,
@@ -36,6 +35,6 @@ void setup()
 
 void loop()
 {
-    // Run TZIoT background tasks
-    TZIoT.run();
+    // Run AIoT background tasks
+    AIoT.run();
 }

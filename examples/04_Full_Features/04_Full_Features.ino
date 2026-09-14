@@ -28,7 +28,7 @@ Virtual_WRITE(relay1)
     Serial.printf("[MQTT RECV] Relay/LED: %d\n", state);
 
     // Phản hồi lại trạng thái xác nhận về Topic control
-    TZIoT.writeControl("relay1", state);
+    AIoT.writeControl("relay1", state);
 }
 
 // ======================================================
@@ -36,7 +36,7 @@ Virtual_WRITE(relay1)
 // ======================================================
 void sendChipTelemetry()
 {
-    if (!TZIoT.CheckConnect())
+    if (!AIoT.CheckConnect())
     {
         return; // Bỏ qua nếu chưa kết nối WiFi
     }
@@ -61,10 +61,10 @@ void sendChipTelemetry()
     Serial.println("--------------------------");
 
     // 3. Đóng gói & gửi lên Topic: device/<MAC>/telemetry
-    TZIoT.writeTelemetry("chip_temp", chipTemp);
-    TZIoT.writeTelemetry("free_ram", (int)freeRam);
-    TZIoT.writeTelemetry("wifi_rssi", wifiRssi);
-    TZIoT.writeTelemetry("uptime", (int)uptimeSec);
+    AIoT.writeTelemetry("chip_temp", chipTemp);
+    AIoT.writeTelemetry("free_ram", (int)freeRam);
+    AIoT.writeTelemetry("wifi_rssi", wifiRssi);
+    AIoT.writeTelemetry("uptime", (int)uptimeSec);
 }
 
 // ======================================================
@@ -77,14 +77,14 @@ void setup()
     digitalWrite(STATUS_LED_PIN, LOW);
 
     // Khởi tạo và kết nối thư viện với WiFi & HiveMQ Broker
-    TZIoT.begin(WIFI_SSID, WIFI_PASS, MQTT_SSID, MQTT_PASS);
+    AIoT.begin(WIFI_SSID, WIFI_PASS, MQTT_SSID, MQTT_PASS);
 
     // Hẹn giờ tự động đọc và gửi nhiệt độ mỗi 3 giây (3000ms)
-    TZIoT.addTimeEvent(3000, sendChipTelemetry);
+    AIoT.addTimeEvent(3000, sendChipTelemetry);
 }
 
 void loop()
 {
     // Duy trì toàn bộ hoạt động của thư viện
-    TZIoT.run();
+    AIoT.run();
 }

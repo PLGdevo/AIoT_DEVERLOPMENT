@@ -1,13 +1,13 @@
 /*
- * TZIoT Example
+ * AIoT Example
  * Example: Setup MODBUS + Communicate MODBUS
- * Designed by TZ
+ * Designed by AIoT
  */
 
 #define DEBUG_COLOR
 #define BUTTON_CONFIG
 
-#include <TZIoT.h>
+#include <AIoT.h>
 
 /*=========================
     MODBUS CONFIGURATION

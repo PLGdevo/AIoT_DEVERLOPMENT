@@ -1,5 +1,5 @@
-#ifndef IoT_PnP_ESP32
-#define IoT_PnP_ESP32
+#ifndef AIOT_PNP_ESP32
+#define AIOT_PNP_ESP32
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -16,7 +16,7 @@ char STA_WIFI_NAME[32];
 char STA_WIFI_PASS[32];
 #define STA_WIFI_PORT "80"
 
-#define AP_WIFI_NAME "TN_IoT: "
+#define AP_WIFI_NAME "AIoT: "
 #define AP_WIFI_PASS "IoT210605"
 #define AP_WIFI_IP "192.168.21.6"
 #define AP_WIFI_PORT "80"
@@ -535,14 +535,14 @@ inline void PnP<Transport>::CONFIG_MQTT()
     {
         LOG_WIFI("WIFI",
                  "\r\n"
-                 "████████╗███████╗██╗ ██████╗ ████████╗\r\n"
-                 "╚══██╔══╝╚══███╔╝██║██╔═══██╗╚══██╔══╝\r\n"
-                 "   ██║     ███╔╝ ██║██║   ██║   ██║\r\n"
-                 "   ██║    ███╔╝  ██║██║   ██║   ██║\r\n"
-                 "   ██║   ███████╗██║╚██████╔╝   ██║\r\n"
-                 "   ╚═╝   ╚══════╝╚═╝ ╚═════╝    ╚═╝\r\n"
-                 "  TZIoT Firmware v0.0.1\r\n"
-                 "  ESP32 IoT Controller\r\n");
+                 " █████╗ ██╗ ██████╗ ████████╗\r\n"
+                 "██╔══██╗██║██╔═══██╗╚══██╔══╝\r\n"
+                 "███████║██║██║   ██║   ██║   \r\n"
+                 "██╔══██║██║██║   ██║   ██║   \r\n"
+                 "██║  ██║██║╚██████╔╝   ██║   \r\n"
+                 "╚═╝  ╚═╝╚═╝ ╚═════╝    ╚═╝   \r\n"
+                 "  AIoT Firmware v1.0.0\r\n"
+                 "  ESP32 AIoT Controller\r\n");
         SaveMQTT(mqttusername, mqttpass);
         WiFi_STATE = MODE_CONNECTED;
         delay(1000);
