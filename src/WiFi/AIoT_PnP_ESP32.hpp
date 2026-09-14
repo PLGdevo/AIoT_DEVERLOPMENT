@@ -459,8 +459,13 @@ inline void PnP<Transport>::CONFIG_STA()
         }
         if (WiFi.status() == WL_CONNECTED)
         {
+            unsigned long t_ip = millis();
+            while (WiFi.localIP() == IPAddress(0, 0, 0, 0) && millis() - t_ip < 3000)
+            {
+                delay(50);
+            }
             SaveWiFi(_sta_ssid, _sta_pass);
-            LOG_WIFI("WIFI", "WiFi SIGNAL STRENGTH: %s", String(WiFi.RSSI()) + "dBm");
+            LOG_WIFI("WIFI", "WiFi SIGNAL STRENGTH: %s", (String(WiFi.RSSI()) + "dBm").c_str());
             // Serial.println(WiFi.RSSI());
             WiFi_STATE = MODE_CONNECT_MQTT;
             delay(100);
@@ -489,8 +494,13 @@ inline void PnP<Transport>::CONFIG_STA()
         }
         if (WiFi.status() == WL_CONNECTED)
         {
+            unsigned long t_ip = millis();
+            while (WiFi.localIP() == IPAddress(0, 0, 0, 0) && millis() - t_ip < 3000)
+            {
+                delay(50);
+            }
             SaveWiFi(saved_ssid[i].c_str(), saved_pass[i].c_str());
-            LOG_WIFI("WIFI", "WiFi signal strength: %s", String(WiFi.RSSI()) + "dBm");
+            LOG_WIFI("WIFI", "WiFi signal strength: %s", (String(WiFi.RSSI()) + "dBm").c_str());
             WiFi_STATE = MODE_CONNECT_MQTT;
             delay(100);
             return;
@@ -512,7 +522,7 @@ inline void PnP<Transport>::CONFIG_MQTT()
 {
     LOG_WIFI("WIFI", "WIFI_CONNECTED!!!");
     LOG_WIFI("WIFI", "STA_WIFI_NAME: %s", _sta_ssid);
-    LOG_WIFI("WIFI", "STA_DEVICE_IP: %s", WiFi.localIP().toString());
+    LOG_WIFI("WIFI", "STA_DEVICE_IP: %s", WiFi.localIP().toString().c_str());
     LOG_WIFI("WIFI", "DEVICE_MAC: %s", _mac);
     if (strlen(_mqtt_username) > 0)
     {
@@ -582,10 +592,14 @@ inline void PnP<Transport>::CONNECTED()
 //======================================================
 // AUTO FIX RUNNING
 //======================================================
+// ======================================================
+// CONFIG_STA - RECONNECT WIFI (STA ONLY)
+// ======================================================
 template <class Transport>
 inline void PnP<Transport>::RECONNECT_WIFI()
 {
-    LOG_WIFI("WIFI", "RECONNECT WIFI...");
+    unsigned long t0 = millis();
+    LOG_WIFI("WIFI", "RECONNECTING WIFI...");
     // =========================
     // RESET WIFI STATE SẠCH
     // =========================
@@ -612,7 +626,12 @@ inline void PnP<Transport>::RECONNECT_WIFI()
         }
         if (WiFi.status() == WL_CONNECTED)
         {
-            LOG_WIFI("WIFI", "RECONNECT WIFI DONE");
+            unsigned long t_ip = millis();
+            while (WiFi.localIP() == IPAddress(0, 0, 0, 0) && millis() - t_ip < 3000)
+            {
+                delay(50);
+            }
+            LOG_WIFI("WIFI", "RECONNECT WIFI DONE (IP: %s)", WiFi.localIP().toString().c_str());
             WiFi_STATE = MODE_CONNECT_MQTT;
             return;
         }
@@ -640,7 +659,12 @@ inline void PnP<Transport>::RECONNECT_WIFI()
         }
         if (WiFi.status() == WL_CONNECTED)
         {
-            LOG_WIFI("WIFI", "RECONNECT WIFI DONE");
+            unsigned long t_ip = millis();
+            while (WiFi.localIP() == IPAddress(0, 0, 0, 0) && millis() - t_ip < 3000)
+            {
+                delay(50);
+            }
+            LOG_WIFI("WIFI", "RECONNECT WIFI DONE (IP: %s)", WiFi.localIP().toString().c_str());
             WiFi_STATE = MODE_CONNECT_MQTT;
             return;
         }
@@ -719,9 +743,26 @@ inline void PnP<Transport>::FAILD_MQTT()
                      { startedmqtt = false;
                         this->handleSaveMQTT(); });
         webServer.begin();
-        LOG_MQTT("MQTT", "OPEN http://%s TO CHECK OR CONFIG MQTT", WiFi.localIP().toString().c_str());
+
+        bool hasValidIP = (WiFi.status() == WL_CONNECTED && WiFi.localIP() != IPAddress(0, 0, 0, 0));
+        if (hasValidIP)
+        {
+            LOG_MQTT("MQTT", "OPEN http://%s TO CHECK OR CONFIG MQTT", WiFi.localIP().toString().c_str());
+        }
+        else
+        {
+            WiFi.mode(WIFI_AP_STA);
+            IPAddress local_ip;
+            local_ip.fromString(_ap_ip);
+            WiFi.softAPConfig(local_ip, local_ip, WIFI_AP_Subnet);
+            WiFi.softAP(_ap_ssid, _ap_pass);
+            dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+            dnsServer.start(53, "*", local_ip);
+            LOG_MQTT("MQTT", "OPEN http://%s (AP: %s) TO CHECK OR CONFIG MQTT", _ap_ip, _ap_ssid);
+        }
     }
     webServer.handleClient();
+    dnsServer.processNextRequest();
     if (serverMQTT.check_connect())
     {
         startedmqtt = false;

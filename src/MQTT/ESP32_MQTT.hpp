@@ -121,12 +121,12 @@ inline void AIoT_MQTT_ESP32<MQTT>::PublishData_control(const char *data)
 template <class MQTT>
 inline void AIoT_MQTT_ESP32<MQTT>::config(const char *mqtt_userName, const char *mqtt_pass)
 {
-    if (mqtt_userName != NULL)
+    if (mqtt_userName != NULL && strlen(mqtt_userName) > 0)
     {
         strncpy(MQTT_USERNAME, mqtt_userName, sizeof(MQTT_USERNAME) - 1);
         MQTT_USERNAME[sizeof(MQTT_USERNAME) - 1] = '\0';
     }
-    if (mqtt_pass != NULL)
+    if (mqtt_pass != NULL && strlen(mqtt_pass) > 0)
     {
         strncpy(MQTT_PASS, mqtt_pass, sizeof(MQTT_PASS) - 1);
         MQTT_PASS[sizeof(MQTT_PASS) - 1] = '\0';
