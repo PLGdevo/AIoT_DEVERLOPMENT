@@ -33,3 +33,4 @@
 #define PIN_RS485_DE_RE  4
 
 #endif /* BOARD_DEFAULT_ESP32_H */
+

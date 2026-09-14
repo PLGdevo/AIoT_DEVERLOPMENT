@@ -142,3 +142,4 @@ private:
 extern AIoTDeviceManager AIoT_Device;
 
 #endif /* AIOT_DEVICE_HPP */
+

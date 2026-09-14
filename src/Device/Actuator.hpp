@@ -115,3 +115,4 @@ private:
 };
 
 #endif /* AIOT_DEVICE_ACTUATOR_HPP */
+

@@ -33,3 +33,4 @@
 #define PIN_BUTTON_CONFIG 0
 
 #endif /* BOARD_AIOT_INDUSTRIAL_H */
+

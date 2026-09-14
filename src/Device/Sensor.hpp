@@ -85,3 +85,4 @@ private:
 };
 
 #endif /* AIOT_DEVICE_SENSOR_HPP */
+

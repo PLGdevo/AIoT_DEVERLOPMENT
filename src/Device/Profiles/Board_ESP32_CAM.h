@@ -31,3 +31,4 @@
 #define PCLK_GPIO_NUM    22
 
 #endif /* BOARD_ESP32_CAM_H */
+

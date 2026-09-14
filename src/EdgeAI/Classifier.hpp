@@ -74,3 +74,4 @@ namespace EdgeAI
 }
 
 #endif /* EDGE_AI_CLASSIFIER_HPP */
+

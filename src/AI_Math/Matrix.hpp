@@ -71,3 +71,4 @@ namespace AI_Math
 }
 
 #endif /* AI_MATH_MATRIX_HPP */
+

@@ -212,3 +212,4 @@ namespace AI_Math
 }
 
 #endif /* AI_MATH_ONLINE_LEARNING_HPP */
+

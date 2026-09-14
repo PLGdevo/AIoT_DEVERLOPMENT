@@ -10,3 +10,4 @@ AIoTDeviceManager AIoT_Device;
 #endif
 
 #endif /* AIOT_DEVICE_H */
+

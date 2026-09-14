@@ -49,3 +49,4 @@ namespace CloudAI
 }
 
 #endif /* CLOUD_AI_GEMINI_CLIENT_HPP */
+

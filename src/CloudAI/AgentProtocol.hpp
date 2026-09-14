@@ -32,3 +32,4 @@ namespace CloudAI
 }
 
 #endif /* CLOUD_AI_AGENT_PROTOCOL_HPP */
+

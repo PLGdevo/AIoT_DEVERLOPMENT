@@ -96,3 +96,4 @@ namespace EdgeAI
 }
 
 #endif /* EDGE_AI_HPP */
+

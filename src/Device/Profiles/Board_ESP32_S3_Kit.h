@@ -39,3 +39,4 @@
 #define PIN_RS485_DE_RE  16
 
 #endif /* BOARD_ESP32_S3_KIT_H */
+

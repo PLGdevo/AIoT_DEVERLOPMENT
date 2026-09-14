@@ -6,3 +6,4 @@
 #include "GeminiClient.hpp"
 
 #endif /* CLOUD_AI_H */
+

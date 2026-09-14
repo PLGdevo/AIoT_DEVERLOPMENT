@@ -47,3 +47,4 @@ namespace CloudAI
 }
 
 #endif /* CLOUD_AI_PROMPT_TEMPLATES_HPP */
+

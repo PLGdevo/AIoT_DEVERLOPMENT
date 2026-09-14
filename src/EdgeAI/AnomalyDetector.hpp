@@ -87,3 +87,4 @@ namespace EdgeAI
 }
 
 #endif /* EDGE_AI_ANOMALY_DETECTOR_HPP */
+

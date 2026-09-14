@@ -29,3 +29,4 @@ namespace EdgeModels
 }
 
 #endif /* MOTOR_VIBRATION_MODEL_H */
+
