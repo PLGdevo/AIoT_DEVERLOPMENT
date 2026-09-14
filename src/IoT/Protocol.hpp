@@ -8,6 +8,7 @@ class AIoTProtocol
 {
 private:
     PnP<MQTTESP32<PubSubClient>> PNP;
+    MQTTESP32<PubSubClient> serverMQTT;
     API API_MESS;
     cJSON *tele_root = NULL;
     cJSON *dataObj_tele = NULL;
@@ -172,6 +173,7 @@ void AIoTProtocol::setTelemetry(Args... args)
 
 void AIoTProtocol::writeControl(const char *key, const Param value)
 {
+    if ((WiFi.status() == WL_CONNECTED) && this->serverMQTT.check_connect())
     if ((WiFi.status() == WL_CONNECTED) && serverMQTT.check_connect())
     {
         const char *data_control = this->API_MESS.WriteControl(key, value);
@@ -184,6 +186,7 @@ void AIoTProtocol::writeControl(const char *key, const Param value)
 
 void AIoTProtocol::writeTelemetry(const char *key, const Param value)
 {
+    if ((WiFi.status() == WL_CONNECTED) && this->serverMQTT.check_connect())
     if ((WiFi.status() == WL_CONNECTED) && serverMQTT.check_connect())
     {
         const char *data = this->API_MESS.WriteTelemetry(key, value);

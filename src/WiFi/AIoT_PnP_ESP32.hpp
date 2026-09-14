@@ -393,7 +393,7 @@ inline void PnP<Transport>::begin(const char *sta_ssid, const char *sta_pass)
     String MAC = WiFi.macAddress();
     strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
     _mac[sizeof(_mac) - 1] = '\0';
-    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s", AP_WIFI_NAME);
+    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s%s", AP_WIFI_NAME, _mac);
     LOG_WIFI("WIFI", "STA_WIFI_NAME: %s", _sta_ssid);
     LOG_WIFI("WIFI", "STA_WIFI_PASS: %s", _sta_pass);
     LOG_WIFI("WIFI", "STA_WIFI_IP: %s", _sta_ip);
@@ -419,7 +419,7 @@ inline void PnP<Transport>::begin(const char *sta_ssid, const char *sta_pass, co
     String MAC = WiFi.macAddress();
     strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
     _mac[sizeof(_mac) - 1] = '\0';
-    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s", AP_WIFI_NAME);
+    snprintf(_ap_ssid, sizeof(_ap_ssid), "%s%s", AP_WIFI_NAME, _mac);
     LOG_WIFI("WIFI", "STA_WIFI_NAME: %s", _sta_ssid);
     LOG_WIFI("WIFI", "STA_WIFI_PASS: %s", _sta_pass);
     LOG_WIFI("WIFI", "STA_WIFI_IP: %s", _sta_ip);

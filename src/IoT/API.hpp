@@ -75,19 +75,31 @@ typedef AIoT_API API;
 
 void AIoT_API::handleMessage(const char *topic, const char *payload)
 {
-
     if (strncmp(topic, BASE_TOPIC, strlen(BASE_TOPIC)) != 0)
         return;
+
     String topicStr = topic;
-    String sub_Prefix;
+    String sub_Prefix = "";
     int p1 = topicStr.indexOf('/');
-    int p2 = topicStr.indexOf('/', p1 + 1);
-    int p3 = topicStr.indexOf('/', p2 + 1);
-    sub_Prefix = topicStr.substring(p2 + 1, p3);
+    if (p1 != -1)
+    {
+        int p2 = topicStr.indexOf('/', p1 + 1);
+        if (p2 != -1)
+        {
+            int p3 = topicStr.indexOf('/', p2 + 1);
+            if (p3 != -1)
+            {
+                sub_Prefix = topicStr.substring(p2 + 1, p3);
+            }
+            else
+            {
+                sub_Prefix = topicStr.substring(p2 + 1);
+            }
+        }
+    }
 
     if (sub_Prefix == API_SUB_PREFIX_CONTROL_TOPIC)
     {
-
         this->handler_control(payload);
     }
 }
