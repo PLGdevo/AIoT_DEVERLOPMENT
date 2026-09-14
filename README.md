@@ -23,9 +23,9 @@
    - [3.1. AIoT Core (IoT, MQTT TLS & Web Captive Portal)](#31-aiot-core-iot-mqtt-tls--web-captive-portal)
    - [3.2. AI_Math (Học thuật & Điện toán AI)](#32-ai_math-học-thuật--điện-toán-ai)
    - [3.3. Device (Trừu tượng hóa phần cứng HAL)](#33-device-trừu-tượng-hóa-phần-cứng-hal)
-   - [3.4. EdgeAI (Trí tuệ nhân tạo tại biên)](#34-edgeai-trí-tuệ-nhân-tạo-tại-biên)
+   - [3.4. EdgeAI (Trí tuệ nhân tạo tại biên tổng quát)](#34-edgeai-trí-tuệ-nhân-tạo-tại-biên-tổng-quát)
    - [3.5. CloudAI & HybridAI (Gemini 3.6 Flash & Phối hợp đa tầng)](#35-cloudai--hybridai-gemini-36-flash--phối-hợp-đa-tầng)
-4. [Tính năng mới: AI Chat 2 chiều & Điều khiển phần cứng](#-4-tính-năng-mới-ai-chat-2-chiều--điều-khiển-phần-cứng)
+4. [Tính năng: AI Chat 2 chiều & Điều khiển phần cứng](#-4-tính-năng-ai-chat-2-chiều--điều-khiển-phần-cứng)
 5. [Bộ công cụ tự dạy (Huấn luyện) AI (AI Training Suite)](#-5-bộ-công-cụ-tự-dạy-huấn-luyện-ai-ai-training-suite)
    - [5.1. Dạy Edge AI (TinyML) bằng `tools/train_edge_ai.py`](#51-dạy-edge-ai-tinyml-bằng-toolstrain_edge_aipy)
    - [5.2. Dạy Cloud AI (Gemini) bằng `tools/train_cloud_ai.py`](#52-dạy-cloud-ai-gemini-bằng-toolstrain_cloud_aipy)
@@ -40,23 +40,25 @@
 
 ## 📖 1. Giới thiệu tổng quan (Overview)
 
-**AIoT_Lib** là một framework mã nguồn mở được thiết kế chuyên biệt cho việc xây dựng các nút mạng **AIoT (Artificial Intelligence of Things)** và hệ thống giám sát công nghiệp thông minh.
+**AIoT_Lib** là một framework mã nguồn mở tổng quát (Domain-Agnostic) được thiết kế cho các nhà phát triển và kỹ sư xây dựng hệ thống **AIoT (Artificial Intelligence of Things)**. 
 
-Khác với các thư viện IoT truyền thống chỉ truyền nhận dữ liệu thô, **AIoT_Lib** kết hợp chặt chẽ mô hình điện toán **Hybrid AI**:
-* **Tầng biên (Edge AI):** Phản xạ bảo vệ thiết bị siêu tốc (**< 1ms**) tại chỗ bằng vi điều khiển ESP32 / ESP32-S3 (ngắt relay, hú còi khi phát hiện rung lắc hoặc nhiệt độ bất thường).
-* **Tầng đám mây (Cloud AI):** Kết nối trực tiếp với **Google Gemini 3.6 Flash** qua HTTPS REST hoặc qua MQTT TLS Broker (HiveMQ Cloud) để phân tích xu hướng dài hạn, chẩn đoán sự cố theo chuẩn quốc tế (*ISO 10816-3*) và cho phép người vận hành **trò chuyện tự nhiên và điều khiển phần cứng bằng giọng nói/văn bản**.
+Thư viện **hoàn toàn không gán cứng bất kỳ loại cảm biến hay bài toán cụ thể nào vào mã nguồn lõi**. Lập trình viên toàn quyền đưa dữ liệu cảm biến bất kỳ (Analog, Digital, I2C, SPI, UART Modbus...) vào để tính toán, tự huấn luyện và ra quyết định.
+
+Framework kết hợp liền mạch mô hình điện toán **Hybrid AI**:
+* **Tầng biên (Edge AI):** Phản xạ bảo vệ thiết bị siêu tốc (**< 1ms**) tại chỗ bằng vi điều khiển ESP32 / ESP32-S3 (tự phát hiện bất thường và kích hoạt cơ cấu chấp hành mà không cần phụ thuộc Internet).
+* **Tầng đám mây (Cloud AI):** Kết nối với mô hình ngôn ngữ lớn **Google Gemini 3.6 Flash** qua HTTPS REST hoặc MQTT Broker để phân tích sâu, suy luận logic ngữ cảnh và cho phép người vận hành **trò chuyện và điều khiển phần cứng bằng ngôn ngữ tự nhiên**.
 
 ```mermaid
 flowchart TD
-    subgraph Sensors["Cảm biến & Ngoại vi"]
-        S1["Rung động 3 trục"]
-        S2["Nhiệt độ / Áp suất"]
+    subgraph Sensors["Cảm biến & Tín hiệu của bạn"]
+        S1["Tín hiệu cảm biến 1"]
+        S2["Tín hiệu cảm biến 2"]
     end
 
-    subgraph EdgeLayer["TẦNG 1: Edge AI (ESP32-S3 @ 240MHz)"]
-        DSP["Trích xuất đặc trưng DSP (RMS, Mean, FFT)"]
-        TinyML["TinyML Classifier (< 1ms)"]
-        Reflex["🚨 Phản xạ khẩn cấp: Tự ngắt Relay bảo vệ"]
+    subgraph EdgeLayer["TẦNG 1: Edge AI (ESP32 / ESP32-S3)"]
+        DSP["Trích xuất đặc trưng toán học (DSP / Statistics)"]
+        TinyML["Suy luận TinyML (< 1ms)"]
+        Reflex["🚨 Phản xạ tại chỗ: Cơ cấu chấp hành / Relay / Còi"]
     end
 
     subgraph CommLayer["TẦNG TRUYỀN THÔNG BẢO MẬT"]
@@ -65,12 +67,12 @@ flowchart TD
     end
 
     subgraph CloudLayer["TẦNG 2: Cloud AI Agent"]
-        Gemini["Google Gemini 3.6 Flash (Chẩn đoán sâu ISO 10816)"]
+        Gemini["Google Gemini 3.6 Flash (Suy luận đa tầng)"]
         Action["Action Calling: [CMD:LED_ON], [CMD:RELAY1_OFF]"]
     end
 
     Sensors --> DSP --> TinyML
-    TinyML -->|Nguy cấp| Reflex
+    TinyML -->|Bất thường khẩn| Reflex
     TinyML -->|Định kỳ| MQTT
     EdgeLayer <==>|Chat 2 chiều| HTTPS <==> Gemini
     MQTT <==> Gemini
@@ -81,7 +83,7 @@ flowchart TD
 
 ## 🏛️ 2. Kiến trúc hệ thống 5 Phân hệ (Architecture)
 
-Toàn bộ mã nguồn được thiết kế theo dạng module độc lập (Modular Architecture), tối ưu hóa bộ nhớ RAM và Flash cho vi điều khiển:
+Toàn bộ mã nguồn được thiết kế theo dạng module độc lập (Modular Architecture):
 
 ```text
 AIoT_LIB/
@@ -99,7 +101,7 @@ AIoT_LIB/
 │   │
 │   ├── Device/                        # 🔌 2. TRỪU TƯỢNG HÓA PHẦN CỨNG (HAL)
 │   │   ├── Device.h                   # Header chính Device (AIoT_Device)
-│   │   ├── Device.hpp                 # Quản lý AIoTDeviceManager (LED Onboard, RGB WS2812, Relay)
+│   │   ├── Device.hpp                 # Quản lý phần cứng (LED Onboard, RGB WS2812, Relay, Buzzer)
 │   │   ├── Actuator.hpp               # Quản lý Relay, PWM, LED, Buzzer
 │   │   ├── Sensor.hpp                 # Cảm biến Analog, Digital, Chip Temp, Free RAM
 │   │   └── Profiles/                  # Sơ đồ chân định nghĩa sẵn theo từng bo mạch
@@ -108,14 +110,12 @@ AIoT_LIB/
 │   │       ├── Board_ESP32_CAM.h      # ESP32-CAM AI Vision
 │   │       └── Board_AIoT_Industrial.h# AIoT Industrial Controller (RS485 + Opto Relay)
 │   │
-│   ├── EdgeAI/                        # ⚡ 3. TRÍ TUỆ NHÂN TẠO TẠI BIÊN (TINYML)
+│   ├── EdgeAI/                        # ⚡ 3. TRÍ TUỆ NHÂN TẠO TẠI BIÊN (TINYML TỔNG QUÁT)
 │   │   ├── EdgeAI.h                   # Header chính EdgeAI
-│   │   ├── EdgeAI.hpp                 # Lớp quản lý suy luận EdgeAI::Engine
+│   │   ├── EdgeAI.hpp                 # Lớp quản lý suy luận tổng quát EdgeAI::Engine
 │   │   ├── AnomalyDetector.hpp        # Phát hiện bất thường tự căn chỉnh (Auto-baseline Z-Score)
 │   │   ├── Classifier.hpp             # Bộ phân loại trạng thái thiết bị đa lớp
-│   │   └── Models/                    # Lưu trữ các mô hình mẫu (C-Array Models)
-│   │       ├── MotorVibrationModel.h  # Model mẫu phân loại rung động động cơ
-│   │       └── CustomModelWeights.h   # Model do script train_edge_ai.py tự động xuất ra
+│   │   └── Models/                    # Thư mục chứa ma trận trọng số C++ Header do bạn tạo
 │   │
 │   ├── CloudAI/                       # ☁️ 4. CLOUD AI & GENERATIVE AI AGENTS
 │   │   ├── CloudAI.h                  # Header chính CloudAI
@@ -132,12 +132,12 @@ AIoT_LIB/
 │   ├── WiFi/                          # 🌐 WiFi Manager, Smart Captive Portal WebUI
 │   └── Ultility/                      # ⚙️ Modbus RTU/RS485, cJSON, Timer Scheduler
 │
-├── tools/                             # 🛠️ BỘ CÔNG CỤ DẠY (HUẤN LUYỆN) AI ĐỘC LẬP
-│   ├── train_edge_ai.py               # Huấn luyện TinyML & Tự động xuất mã nguồn C++ Header
-│   ├── train_cloud_ai.py              # Dạy tri thức nhà máy (ISO 10816) & Action Calling cho Gemini
+├── tools/                             # 🛠️ BỘ CÔNG CỤ TỰ DẠY (HUẤN LUYỆN) AI CỦA BẠN
+│   ├── train_edge_ai.py               # Tự dạy mô hình TinyML & Xuất mã nguồn C++ Header
+│   ├── train_cloud_ai.py              # Dạy tri thức chuyên môn & Action Calling cho Gemini
 │   └── cloud_ai_agent.py              # Server Python mẫu làm cầu nối MQTT Broker với Gemini
 │
-└── examples/                          # 📚 5 BÀI VÍ DỤ MẪU HOÀN CHỈNH
+└── examples/                          # 📚 CÁC BÀI VÍ DỤ ỨNG DỤNG CỤ THỂ
 ```
 
 ---
@@ -149,18 +149,18 @@ AIoT_LIB/
   - `device/<MAC_ADDRESS>/telemetry`: Đẩy dữ liệu cảm biến định kỳ lên Cloud.
   - `device/<MAC_ADDRESS>/control`: Nhận lệnh điều khiển từ Web/App/AI Agent.
 - **Bảo mật**: Kết nối mã hóa **TLS/SSL (Port 8883)**.
-- **Smart Captive Portal (Web PnP)**: Khi mất kết nối hoặc lần đầu khởi động, thiết bị tự động phát Access Point (`AIoT: <MAC>`, IP: `192.168.21.6`) với giao diện Web Responsive để quét WiFi và cấu hình tài khoản MQTT vào bộ nhớ Flash NVS.
+- **Smart Captive Portal (Web PnP)**: Tự động phát Access Point (`AIoT: <MAC>`, IP: `192.168.21.6`) với giao diện Web Responsive để cấu hình WiFi và tài khoản MQTT khi cần.
 - **Lập trình hướng sự kiện**: Macro `Virtual_WRITE(pin)` tự động lắng nghe lệnh điều khiển từ JSON mà không cần viết hàm parse thủ công.
 
 ### 3.2. AI_Math (Học thuật & Điện toán AI)
-Dành cho lập trình viên và nhà nghiên cứu muốn tự xây dựng hoặc huấn luyện mô hình AI ngay trên chip:
+Dành cho lập trình viên và nhà nghiên cứu tự xây dựng mô hình toán học:
 - **`Statistics`**: Tính Mean, Variance, StdDev, RMS, Peak-to-Peak, MinMax, Z-Score.
-- **`Matrix`**: Tích vô hướng, khoảng cách Euclid/Manhattan, lớp Dense Layer forward.
-- **`DSP`**: Cửa sổ trượt `SlidingWindow`, bộ lọc `MovingAverageFilter`, `LowPassFilter`, và biến đổi Fourier nhanh **`FastFourierTransform` (FFT)** để phân tích phổ tần số rung động / âm thanh.
+- **`Matrix`**: Tích vô hướng, khoảng cách Euclid/Manhattan, phép toán Dense Layer forward.
+- **`DSP`**: Cửa sổ trượt `SlidingWindow`, bộ lọc `MovingAverageFilter`, `LowPassFilter`, và biến đổi Fourier nhanh **`FastFourierTransform` (FFT)** để phân tích phổ tần số tín hiệu bất kỳ.
 - **`Activations`**: Hàm kích hoạt mạng nơ-ron (ReLU, LeakyReLU, Sigmoid, Tanh, Softmax, ArgMax).
 - **`OnlineLearning`**: 
   - *Thuật toán Welford $O(1)$*: Học phân phối chuẩn trực tuyến liên tục mà không cần lưu mảng dữ liệu trong RAM.
-  - *Online k-NN*: Phân loại mẫu trực tiếp trên chip.
+  - *Online k-NN*: Tự phân loại mẫu trực tiếp trên chip.
   - *Online K-Means*: Phân cụm tự động không cần gán nhãn trước.
 
 ### 3.3. Device (Trừu tượng hóa phần cứng HAL)
@@ -169,18 +169,19 @@ Cung cấp giao diện `AIoT_Device` độc lập với phần cứng:
 - Hỗ trợ đèn **LED Onboard thông thường** và **đèn RGB NeoPixel WS2812** (ESP32-S3 GPIO 48).
 - Điều khiển ngữ nghĩa: `AIoT_Device.led(true)`, `AIoT_Device.rgb(255, 0, 0)`, `AIoT_Device.relay(1, HIGH)`, `AIoT_Device.beep(100)`.
 
-### 3.4. EdgeAI (Trí tuệ nhân tạo tại biên)
+### 3.4. EdgeAI (Trí tuệ nhân tạo tại biên tổng quát)
+- **Hoàn toàn độc lập bài toán**: Nhận luồng số liệu từ bất kỳ cảm biến nào của bạn.
 - **Phát hiện bất thường (Anomaly Detection)**: Tự học đường cơ sở (Baseline) trong $N$ chu kỳ khởi động, sau đó tính điểm bất thường Z-Score.
-- **Phân loại trạng thái (Classifier)**: Đưa ra cảnh báo `NORMAL`, `WARNING`, `CRITICAL` trong $< 1\text{ms}$.
-- **Hỗ trợ nạp mô hình TinyML**: Tương thích mô hình C-Array trích xuất từ `tools/train_edge_ai.py`, Edge Impulse hoặc TensorFlow Lite Micro.
+- **Phân loại trạng thái (Classifier)**: Phân loại đa lớp trong $< 1\text{ms}$.
+- **Hỗ trợ nạp mô hình TinyML tùy biến**: Hàm suy luận `predict(features, W, b, numClasses, numFeatures, conf)` cho phép bạn nạp bất kỳ ma trận trọng số nào do bạn tự huấn luyện.
 
 ### 3.5. CloudAI & HybridAI (Gemini 3.6 Flash & Phối hợp đa tầng)
-- **Tích hợp Gemini 3.6 Flash**: Tự động sinh Prompt JSON chuẩn hóa cho các tác vụ chuẩn đoán lỗi, tối ưu năng lượng và bảo trì dự đoán.
-- **Hybrid AI Orchestration**: Phản xạ ngắt relay khẩn cấp tại biên ngay khi có sự cố mà không cần chờ Internet, đồng thời trích xuất đặc trưng gửi lên cho Gemini Agent phân tích xu hướng dài hạn.
+- **Tích hợp Gemini 3.6 Flash**: Tự động sinh Prompt JSON chuẩn hóa cho các tác vụ phân tích dữ liệu và suy luận thông minh.
+- **Hybrid AI Orchestration**: Phản xạ ngắt cơ cấu chấp hành tại biên ngay khi có sự cố mà không cần chờ Internet, đồng thời trích xuất đặc trưng gửi lên cho Cloud AI phân tích chuyên sâu.
 
 ---
 
-## 💡 4. Tính năng mới: AI Chat 2 chiều & Điều khiển phần cứng
+## 💡 4. Tính năng: AI Chat 2 chiều & Điều khiển phần cứng
 
 Hệ thống cho phép bạn trò chuyện trực tiếp với AI thông qua **Serial Monitor** (Baud 115200) và AI có thể **trực tiếp điều khiển các cơ cấu chấp hành trên bo mạch**:
 
@@ -199,35 +200,35 @@ Khi bạn trò chuyện với AI, Gemini sẽ nhận diện ý định và tự 
   $\rightarrow$ Gemini trả lời kèm `[CMD:LED_BLINK]` $\rightarrow$ ESP32 chớp nháy đèn LED liên tục 4 lần.
 * Người dùng: *"Tắt đèn led"*
   $\rightarrow$ Gemini trả lời kèm `[CMD:LED_OFF]` $\rightarrow$ ESP32 tắt đèn LED.
-* Người dùng: *"Cắt nguồn relay 1 khẩn cấp"*
+* Người dùng: *"Cắt nguồn relay 1"*
   $\rightarrow$ Gemini trả lời kèm `[CMD:RELAY1_OFF]` $\rightarrow$ ESP32 ngắt Relay 1 bảo vệ thiết bị.
 
 ---
 
 ## 🛠️ 5. Bộ công cụ tự dạy (Huấn luyện) AI (AI Training Suite)
 
-Thư mục `tools/` chứa các script hoàn chỉnh giúp nhà nghiên cứu và lập trình viên dễ dàng tự dạy mô hình:
+Thư mục `tools/` chứa các script độc lập giúp bạn tự do huấn luyện mô hình theo bài toán của riêng mình:
 
 ### 5.1. Dạy Edge AI (TinyML) bằng `tools/train_edge_ai.py`
-Công cụ giúp bạn đưa dữ liệu cảm biến thực tế vào huấn luyện mô hình phân loại trên chip:
+Công cụ giúp bạn đưa tập dữ liệu cảm biến của bạn vào để huấn luyện mô hình phân loại trên chip:
 ```bash
 python tools/train_edge_ai.py
 ```
 * **Tính năng:**
-  - Hỗ trợ chạy ngay bằng **Pure Python** (không cần cài thêm thư viện) hoặc tự nâng cấp lên `scikit-learn` & `numpy`.
-  - Đánh giá độ chính xác (Accuracy, Confusion Matrix).
-  - **Tự động xuất file C++ Header** [`src/EdgeAI/Models/CustomModelWeights.h`](src/EdgeAI/Models/CustomModelWeights.h) chứa ma trận trọng số $W$ và $b$ để nhúng trực tiếp vào ESP32!
+  - Hỗ trợ chạy ngay bằng **Pure Python** (không cần cài thêm thư viện ngoài) hoặc tự nâng cấp lên `scikit-learn` & `numpy`.
+  - Bạn chỉ cần thay thế hàm nạp dữ liệu bằng mảng số liệu hoặc file CSV cảm biến của bạn.
+  - **Tự động xuất file C++ Header** chứa ma trận trọng số $W$ và $b$ để nhúng trực tiếp vào ESP32!
 
 ### 5.2. Dạy Cloud AI (Gemini) bằng `tools/train_cloud_ai.py`
-Công cụ giúp dạy tri thức kỹ thuật chuyên sâu và quy tắc ứng xử cho Cloud AI:
+Công cụ giúp dạy tri thức chuyên môn và quy tắc ứng xử cho Cloud AI:
 ```bash
 python tools/train_cloud_ai.py
 ```
 * **Tính năng:**
-  - **Zero-Dependency:** Sử dụng thư viện mạng chuẩn của Python (`urllib.request`), không cần `pip install`.
+  - **Zero-Dependency:** Chạy bằng thư viện mạng chuẩn của Python (`urllib.request`), không cần `pip install`.
   - **Tự động nhận diện API Key:** Tự động đọc key đã lưu trong `src/main.cpp`.
-  - **Nạp tri thức chuyên ngành (Domain Knowledge):** Dạy AI hiểu tiêu chuẩn rung động quốc tế *ISO 10816-3*, ngưỡng nhiệt độ và quy trình khẩn cấp.
-  - **Dạy ra lệnh phần cứng:** Dạy AI tự động gắn các thẻ `[CMD:LED_ON]`, `[CMD:RELAY1_OFF]` khi phát hiện nguy cơ cháy nổ, kẹt trục.
+  - **Tự định nghĩa tri thức (Domain Knowledge):** Bạn toàn quyền điền tài liệu kỹ thuật, ngưỡng an toàn và quy trình xử lý của riêng bạn vào biến `PLANT_DOMAIN_KNOWLEDGE`.
+  - **Dạy ra lệnh phần cứng:** Dạy AI tự động gắn các thẻ `[CMD:LED_ON]`, `[CMD:RELAY1_OFF]` khi phát hiện tình huống tương ứng.
 
 ### 5.3. Server trung gian `tools/cloud_ai_agent.py`
 Script chạy trên máy tính hoặc máy chủ để làm cầu nối giữa HiveMQ Cloud và Gemini:
@@ -266,7 +267,7 @@ lib_deps =
     https://github.com/ThangNguyen2106-dash/AIoT_DEVERLOPMENT.git
 ```
 
-### Mã nguồn hoàn chỉnh mẫu (`src/main.cpp`):
+### Khung mã nguồn mẫu tổng quát (`src/main.cpp`):
 ```cpp
 #include <Arduino.h>
 
@@ -286,6 +287,12 @@ const char *GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // Lấy tại aistudio.goog
 
 HybridAIEngine hybridAI;
 
+// Hàm đọc cảm biến của bạn
+float readSensorSignal()
+{
+    return (float)AIoT_Device.readAnalog(1);
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -298,7 +305,11 @@ void setup()
 void loop()
 {
     AIoT.run();
-    // Edge AI giám sát liên tục...
+
+    // Edge AI giám sát mẫu cảm biến liên tục
+    float val = readSensorSignal();
+    EdgeAI::InferenceResult res = hybridAI.process(val, 1);
+
     delay(50);
 }
 ```
@@ -326,16 +337,16 @@ Hệ thống cho phép bạn kiểm soát hoàn toàn việc xuất log ra Seria
 
 ## 📚 9. Các bài ví dụ mẫu (Examples)
 
-Thư viện đi kèm 5 ví dụ mẫu đầy đủ trong thư mục `examples/`:
+Tất cả các bài toán và trường hợp ứng dụng thực tế cụ thể được đặt tại thư mục `examples/` để tham khảo:
 1. **[`01_Basic_IoT`](examples/01_Basic_IoT/01_Basic_IoT.ino)**: Kết nối WiFi, MQTT TLS 8883, đẩy Telemetry và nhận lệnh qua `Virtual_WRITE`.
-2. **[`02_AI_Math_Academic`](examples/02_AI_Math_Academic/02_AI_Math_Academic.ino)**: Minh họa toán học ma trận, hàm kích hoạt, DSP FFT và thuật toán học trực tuyến Welford $O(1)$.
-3. **[`03_Edge_AI_Anomaly`](examples/03_Edge_AI_Anomaly/03_Edge_AI_Anomaly.ino)**: Phát hiện bất thường cục bộ không cần Internet và tự động cắt Relay khi vượt ngưỡng an toàn.
-4. **[`04_Cloud_AI_Gemini`](examples/04_Cloud_AI_Gemini/04_Cloud_AI_Gemini.ino)**: Đóng gói Prompt công nghiệp và giao tiếp 2 chiều với Google Gemini.
-5. **[`05_Hybrid_AI_Industrial`](examples/05_Hybrid_AI_Industrial/05_Hybrid_AI_Industrial.ino)**: Hệ thống phối hợp Hybrid AI hoàn chỉnh giữa ESP32 Edge AI và Gemini Cloud Agent.
+2. **[`02_AI_Math_Academic`](examples/02_AI_Math_Academic/02_AI_Math_Academic.ino)**: Minh họa toán học ma trận, hàm kích hoạt, DSP biến đổi Fourier (FFT) và thuật toán tự học trực tuyến Welford $O(1)$.
+3. **[`03_Edge_AI_Anomaly`](examples/03_Edge_AI_Anomaly/03_Edge_AI_Anomaly.ino)**: Ví dụ ứng dụng phát hiện bất thường cục bộ không cần Internet và tự động ngắt tải bảo vệ.
+4. **[`04_Cloud_AI_Gemini`](examples/04_Cloud_AI_Gemini/04_Cloud_AI_Gemini.ino)**: Ví dụ đóng gói Prompt và giao tiếp 2 chiều với Google Gemini.
+5. **[`05_Hybrid_AI_Industrial`](examples/05_Hybrid_AI_Industrial/05_Hybrid_AI_Industrial.ino)**: Ví dụ ứng dụng công nghiệp thực tế giám sát rung động và nhiệt độ thiết bị theo tiêu chuẩn ISO 10816-3 bằng mô hình Hybrid AI phối hợp Edge AI và Gemini Cloud Agent.
 
 ---
 
 ## 📜 10. Tác giả & Bản quyền (License)
 
 * **Tác giả:** Thang Nguyen ([@ThangNguyen2106-dash](https://github.com/ThangNguyen2106-dash))
-* **Bản quyền:** Phát hành theo giấy phép **MIT License**. Bạn có toàn quyền sử dụng, sửa đổi và tích hợp vào các dự án thương mại hoặc nghiên cứu học thuật.
+* **Bản quyền:** Phát hành theo giấy phép **MIT License**. Bạn có toàn quyền sử dụng, sửa đổi và tích hợp vào các dự án thương mại hoặc nghiên cứu học thuật của riêng bạn.
