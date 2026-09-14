@@ -103,7 +103,31 @@ public:
         }
     }
 
-    void led(bool state) { actuators.setLed(state); }
+    void led(bool state)
+    {
+        actuators.setLed(state);
+#ifdef PIN_RGB_LED
+        if (state)
+            neopixelWrite(PIN_RGB_LED, 64, 64, 64);
+        else
+            neopixelWrite(PIN_RGB_LED, 0, 0, 0);
+#elif defined(RGB_BUILTIN)
+        if (state)
+            neopixelWrite(RGB_BUILTIN, 64, 64, 64);
+        else
+            neopixelWrite(RGB_BUILTIN, 0, 0, 0);
+#endif
+    }
+
+    void rgb(uint8_t r, uint8_t g, uint8_t b)
+    {
+#ifdef PIN_RGB_LED
+        neopixelWrite(PIN_RGB_LED, r, g, b);
+#elif defined(RGB_BUILTIN)
+        neopixelWrite(RGB_BUILTIN, r, g, b);
+#endif
+    }
+
     void toggleLed() { actuators.toggleLed(); }
     void buzzer(bool state) { actuators.setBuzzer(state); }
     void beep(unsigned int ms = 100) { actuators.buzzerBeep(ms); }
