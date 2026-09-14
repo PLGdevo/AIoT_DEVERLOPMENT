@@ -18,7 +18,7 @@ public:
         html = F(
             "<!DOCTYPE html><html lang='vi'><head>"
             "<meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1.0'>"
-            "<title>ProKit IoT - Cấu Hình Thiết Bị</title>"
+            "<title>AIoT - Cấu Hình Thiết Bị</title>"
             "<style>"
             ":root{--primary:#2563eb;--primary-hover:#1d4ed8;--bg:#f8fafc;--card:#ffffff;--text:#1e293b;--subtext:#64748b;--border:#e2e8f0;--success:#10b981;--radius:12px}"
             "*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif}"
@@ -48,8 +48,8 @@ public:
             "<body>"
             "<div class='card'>"
             "<div class='header'>"
-            "<h2>🌐 ProKit IoT</h2>"
-            "<p>Cấu hình WiFi & Máy chủ HiveMQ</p>"
+            "<h2>🌐 AIoT Platform</h2>"
+            "<p>Cấu hình WiFi & Máy chủ HiveMQ Cloud</p>"
             "</div>"
             "<div class='info-badge'>"
             "<span><b>MAC:</b> ");
@@ -79,15 +79,15 @@ public:
             "</div>"
             "</div>"
             "<div class='section-title' style='margin-top:18px;'>2. Máy chủ MQTT</div>"
-            "<div class='info-badge' style='background:#f0fdf4;border-color:#bbf7d0;color:#166534;margin-bottom:12px;'>"
-            "<span>Mặc định: <b>broker.hivemq.com:1883</b> (Ẩn danh / Tự động)</span>"
+            "<div class='info-badge' style='background:#f0fdf4;border-color:#bbf7d0;color:#166534;margin-bottom:12px;font-size:11px;'>"
+            "<span>Máy chủ: <b>HiveMQ Cloud TLS (Port 8883)</b></span>"
             "</div>"
             "<div class='form-group'>"
             "<label for='mqtt_user'>Tài khoản (Tùy chọn):</label>"
             "<input type='text' id='mqtt_user' name='mqtt_user' value='");
         html += user;
         html += F(
-            "' placeholder='Để trống nếu dùng HiveMQ Public'>"
+            "' placeholder='Để trống nếu dùng mặc định'>"
             "</div>"
             "<div class='form-group'>"
             "<label for='mqtt_pass'>Mật khẩu MQTT (Tùy chọn):</label>"
@@ -95,7 +95,7 @@ public:
             "<input type='password' id='mqtt_pass' name='mqtt_pass' value='");
         html += pass;
         html += F(
-            "' placeholder='Để trống nếu dùng HiveMQ Public'>"
+            "' placeholder='Để trống nếu dùng mặc định'>"
             "<span onclick='togglePwd(\"mqtt_pass\")'>👁️</span>"
             "</div>"
             "</div>"
@@ -105,7 +105,7 @@ public:
             "<button class='btn-sub' onclick='doAction(\"/restart\")'>🔄 Khởi động lại</button>"
             "<button class='btn-sub' style='color:#ef4444;' onclick='if(confirm(\"Xóa toàn bộ cấu hình WiFi/MQTT đã lưu?\"))doAction(\"/reset\")'>🗑️ Xóa cài đặt</button>"
             "</div>"
-            "<div class='footer'>ProKit IoT Platform • HiveMQ & Cloud AI</div>"
+            "<div class='footer'>AIoT Platform • Multi-chip IoT Framework</div>"
             "</div>"
             "<script>"
             "function togglePwd(id){var x=document.getElementById(id);x.type=x.type==='password'?'text':'password';}"
