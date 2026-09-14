@@ -3,7 +3,7 @@
 #define DEBUG_COLOR
 #define BUTTON_CONFIG
 
-#include <TZIoT.h>
+#include <AIoT.h>
 
 // ======================================================
 // 1. THÔNG TIN KẾT NỐI WIFI

@@ -1,0 +1,35 @@
+{
+  "name": "AIoT_Lib",
+  "version": "1.0.0",
+  "description": "High-performance AIoT (Artificial Intelligence of Things) framework for ESP32 and ESP32-S3 with HiveMQ Cloud TLS and Generative AI readiness.",
+  "keywords": [
+    "aiot",
+    "iot",
+    "esp32",
+    "esp32-s3",
+    "hivemq",
+    "gemini",
+    "ai",
+    "mqtt",
+    "captive-portal",
+    "telemetry"
+  ],
+  "authors": [
+    {
+      "name": "ThangNguyen2106",
+      "url": "https://github.com/ThangNguyen2106-dash"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ThangNguyen2106-dash/AIoT_DEVERLOPMENT.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "headers": [
+    "AIoT.h",
+    "TZIoT.h"
+  ],
+  "examples": "examples/*/*.ino"
+}
+

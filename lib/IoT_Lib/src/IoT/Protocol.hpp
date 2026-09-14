@@ -214,4 +214,5 @@ void PROTOCOL::run()
 }
 
 PROTOCOL TZIoT;
+#define AIoT TZIoT
 #endif /*INC_IoT_PROTOCAL_HPP_*/
