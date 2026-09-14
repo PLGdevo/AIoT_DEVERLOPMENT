@@ -211,10 +211,11 @@ void sendSensorData()
 
     Serial.printf("[TELEMETRY] Temp: %.2f *C | RAM: %u B | RSSI: %d dBm\n", chipTemp, freeRam, wifiRssi);
     
-    // Đẩy dữ liệu lên Cloud: device/<MAC>/telemetry
-    AIoT.writeTelemetry("chip_temp", chipTemp);
-    AIoT.writeTelemetry("free_ram", (int)freeRam);
-    AIoT.writeTelemetry("wifi_rssi", wifiRssi);
+    // Cập nhật các trường và gửi 1 gói JSON duy nhất
+    AIoT.updateTelemetry("chip_temp", chipTemp);
+    AIoT.updateTelemetry("free_ram", (int)freeRam);
+    AIoT.updateTelemetry("wifi_rssi", wifiRssi);
+    AIoT.sendTelemetry();
 }
 
 void setup()
@@ -222,7 +223,7 @@ void setup()
     Serial.begin(115200);
 
     // Khởi tạo WiFi & kết nối MQTT TLS
-    AIoT.begin(WIFI_SSID, WIFI_PASS);
+    AIoT.begin(WIFI_SSID, WIFI_PASS, "IoT_TEST", "mt21062005");
 
     // Lập lịch gửi dữ liệu tự động mỗi 3 giây (3000ms)
     AIoT.addTimeEvent(3000, sendSensorData);
@@ -237,98 +238,147 @@ void loop()
 
 ---
 
-### 📌 Ví dụ 2: Điều khiển thiết bị 2 chiều (Bidirectional Control)
+### 📌 Ví dụ 2: Phát hiện bất thường bằng Edge AI (Anomaly Detection)
 
 ```cpp
 #include <Arduino.h>
-#define DEBUG_COLOR
+#define BOARD_ESP32_S3_KIT
 #include <AIoT.h>
+#include <EdgeAI/EdgeAI.h>
 
-const char *WIFI_SSID = "YOUR_WIFI_SSID";
-const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
+EdgeAI::Engine edgeAI;
 
-#define RELAY_PIN 2
+void setup()
+{
+    Serial.begin(115200);
+    AIoT_Device.begin();
+    
+    // Tự học đường cơ sở (Baseline Calibration) với 30 mẫu ban đầu
+    edgeAI.begin(3.0f, 30);
+    AIoT.begin("WiFi_SSID", "WiFi_PASS", "IoT_TEST", "mt21062005");
+}
 
-// Bắt sự kiện khi Cloud/Web/AI gửi lệnh: {"data": {"relay1": 1}}
+void loop()
+{
+    AIoT.run();
+
+    float sensorSample = AIoT_Device.readVoltage(1) * 10.0f;
+    EdgeAI::InferenceResult res = edgeAI.process(sensorSample);
+
+    // Phản xạ tức thì tại chỗ (< 1ms) không cần Internet
+    if (res.isEmergency) {
+        AIoT_Device.relay(1, LOW); // Ngắt tải khẩn cấp
+        AIoT_Device.beep(100);
+    }
+
+    AIoT.updateTelemetry("anomaly_score", res.score);
+    AIoT.updateTelemetry("state", res.label);
+    AIoT.sendTelemetry();
+
+    delay(100);
+}
+```
+
+---
+
+### 📌 Ví dụ 3: Điện toán & Học thuật Toán học AI (`AI_Math`)
+
+```cpp
+#include <Arduino.h>
+#include <AI_Math/AI_Math.h>
+
+void setup()
+{
+    Serial.begin(115200);
+
+    // 1. Thuật toán Welford học phân phối chuẩn trực tuyến O(1) bộ nhớ
+    AI_Math::WelfordEstimator welford;
+    welford.update(10.5);
+    welford.update(11.2);
+    welford.update(10.8);
+    Serial.printf("Mean: %.2f | StdDev: %.2f\n", welford.getMean(), welford.getStdDev());
+
+    // 2. Thuật toán k-NN tự học và phân loại mẫu trên chip
+    AI_Math::OnlineKNN<2, 10, 3> knn;
+    float normal[] = {1.0, 25.0};
+    float fault[] = {8.5, 75.0};
+    knn.addSample(normal, 0); // Lớp 0: Bình thường
+    knn.addSample(fault, 1);  // Lớp 1: Sự cố
+
+    float query[] = {8.7, 78.0};
+    int predicted = knn.predict(query);
+    Serial.printf("Predicted Class: %d\n", predicted);
+}
+
+void loop() {}
+```
+
+---
+
+### 📌 Ví dụ 4: Toàn diện Hybrid AIoT (Edge AI + HiveMQ Cloud + Gemini Agent)
+
+```cpp
+#include <Arduino.h>
+#define BOARD_AIOT_INDUSTRIAL
+#include <AIoT.h>
+#include <HybridAI/HybridAI.h>
+
+HybridAIEngine hybridAI;
+
+// Lắng nghe lệnh điều khiển sâu từ Gemini Cloud Agent
 Virtual_WRITE(relay1)
 {
     int state = param.getInt();
-    digitalWrite(RELAY_PIN, state ? HIGH : LOW);
-    
-    Serial.printf("[CONTROL] Relay 1 changed state to: %d\n", state);
-
-    // Xác nhận lại trạng thái với Server để đồng bộ giao diện người dùng
+    AIoT_Device.relay(1, state ? HIGH : LOW);
     AIoT.writeControl("relay1", state);
 }
 
 void setup()
 {
     Serial.begin(115200);
-    pinMode(RELAY_PIN, OUTPUT);
-    digitalWrite(RELAY_PIN, LOW);
-
-    AIoT.begin(WIFI_SSID, WIFI_PASS);
+    AIoT_Device.begin();
+    hybridAI.begin(3.0f, 50);
+    AIoT.begin("WiFi_SSID", "WiFi_PASS", "IoT_TEST", "mt21062005");
 }
 
 void loop()
 {
     AIoT.run();
+
+    float sensorSample = AIoT_Device.readVoltage(1) * 10.0f;
+
+    // Edge AI tự động ngắt Relay 1 nếu phát hiện rung giật/nhiệt độ nguy cấp
+    EdgeAI::InferenceResult res = hybridAI.process(sensorSample, 1);
+
+    AIoT.updateTelemetry("score", res.score);
+    AIoT.updateTelemetry("status", res.label);
+    AIoT.sendTelemetry();
+
+    delay(100);
 }
 ```
 
 ---
 
-### 📌 Ví dụ 3: Cấu hình WiFi & MQTT qua Web Captive Portal (Smart AP)
+## 🧠 7. Các Phân Hệ Mở Rộng Dành Cho Developers
 
-Khi chuyển thiết bị đến môi trường mạng mới, thiết bị sẽ tự động phát Access Point để người dùng dùng điện thoại kết nối và cài đặt:
-
-```cpp
-#include <Arduino.h>
-#define DEBUG_COLOR
-#define BUTTON_CONFIG // Bật tính năng cấu hình AP
-#include <AIoT.h>
-
-void setup()
-{
-    Serial.begin(115200);
-
-    // Để trống SSID & Pass để ưu tiên đọc từ Flash NVS.
-    // Nếu chưa có, thiết bị sẽ phát AP: "AIoT: <MAC>" (IP: 192.168.21.6)
-    AIoT.begin("", "");
-}
-
-void loop()
-{
-    AIoT.run();
-}
-```
+| Module | Đường dẫn | Mục đích |
+| :--- | :--- | :--- |
+| **`AI_Math`** | `src/AI_Math/` | Cung cấp nền tảng toán học máy học: Ma trận, Thống kê, DSP (FFT, Windowing), Hàm kích hoạt (ReLU/Softmax), Thuật toán tự học trực tuyến (Welford, Online k-NN, Online K-Means). |
+| **`EdgeAI`** | `src/EdgeAI/` | Bộ máy suy luận TinyML tại biên: Anomaly Detection, State Classifier, nạp model C-array. |
+| **`CloudAI`** | `src/CloudAI/` | Chuẩn hóa kết nối Google Gemini API, OpenAI, Prompt Templates tự động, giao thức Agent 2 chiều. |
+| **`HybridAI`** | `src/HybridAI/` | Tích hợp đa tầng: Phản xạ Edge tức thì (< 1ms) + Đồng bộ insight lên Cloud LLM suy luận sâu. |
+| **`Device`** | `src/Device/` | Trừu tượng hóa phần cứng (HAL), quản lý Actuators (Relay, PWM, Buzzer), Sensors, và Board Profiles định sẵn. |
 
 ---
 
-### 📌 Ví dụ 4: Sẵn sàng tích hợp Generative AI (AI Agent / Gemini)
-
-Dữ liệu đẩy lên broker dưới dạng JSON tiêu chuẩn giúp các dịch vụ AI Agent dễ dàng đọc và ra quyết định:
-
-```text
-[Cảm biến nhiệt độ gửi lên]
---> device/EC:DA:3B:54:F1:20/telemetry: {"data": {"temperature": 39.8}}
-
-[AI Agent phân tích ngữ cảnh và quyết định bật quạt làm mát]
---> device/EC:DA:3B:54:F1:20/control: {"data": {"fan_speed": 100, "alert": "HIGH_TEMP"}}
-
-[ESP32 bắt sự kiện và thực thi tức thì]
-Virtual_WRITE(fan_speed) {
-    int speed = param.getInt();
-    analogWrite(FAN_PWM_PIN, speed);
-}
-```
-
----
-
-## ⚙️ 7. Các cờ tiền xử lý (Pre-processor Flags)
+## ⚙️ 8. Các cờ tiền xử lý (Pre-processor Flags)
 
 | Flag | Mô tả |
 | :--- | :--- |
+| `#define BOARD_ESP32_S3_KIT` | Chọn sơ đồ chân cho kit phát triển ESP32-S3. |
+| `#define BOARD_AIOT_INDUSTRIAL` | Chọn sơ đồ chân cho kit công nghiệp (Modbus RS485 + Relay Opto). |
+| `#define BOARD_ESP32_CAM` | Chọn sơ đồ chân cho kit ESP32-CAM / ESP32-S3-EYE. |
 | `#define DEBUG` | Bật xuất log chẩn đoán hệ thống qua cổng Serial. |
 | `#define DEBUG_COLOR` | Bật xuất log Serial có màu sắc trực quan (ANSI color codes). |
 | `#define BUTTON_CONFIG` | Bật xử lý nút bấm vật lý để chuyển đổi chế độ cấu hình Captive Portal. |

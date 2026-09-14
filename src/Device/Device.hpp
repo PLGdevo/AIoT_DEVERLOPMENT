@@ -1,0 +1,144 @@
+#ifndef AIOT_DEVICE_HPP
+#define AIOT_DEVICE_HPP
+
+#include <Arduino.h>
+
+// Tự động load Profile phần cứng dựa trên cờ biên dịch hoặc dùng mặc định
+#if defined(BOARD_ESP32_S3_KIT)
+#include "Profiles/Board_ESP32_S3_Kit.h"
+#elif defined(BOARD_AIOT_INDUSTRIAL)
+#include "Profiles/Board_AIoT_Industrial.h"
+#elif defined(BOARD_ESP32_CAM)
+#include "Profiles/Board_ESP32_CAM.h"
+#else
+#include "Profiles/Board_Default_ESP32.h"
+#endif
+
+#include "Actuator.hpp"
+#include "Sensor.hpp"
+
+class AIoTDeviceManager
+{
+public:
+    AIoTDeviceManager() : _initialized(false) {}
+
+    void begin()
+    {
+        if (_initialized)
+            return;
+
+#ifdef PIN_STATUS_LED
+        actuators.setLedPin(PIN_STATUS_LED);
+#endif
+
+#ifdef PIN_BUZZER
+        actuators.setBuzzerPin(PIN_BUZZER);
+#endif
+
+#ifdef PIN_RELAY_1
+        actuators.setRelayPin(0, PIN_RELAY_1);
+#endif
+#ifdef PIN_RELAY_2
+        actuators.setRelayPin(1, PIN_RELAY_2);
+#endif
+#ifdef PIN_RELAY_3
+        actuators.setRelayPin(2, PIN_RELAY_3);
+#endif
+#ifdef PIN_RELAY_4
+        actuators.setRelayPin(3, PIN_RELAY_4);
+#endif
+
+#ifdef PIN_ANALOG_1
+        sensors.setAnalogPin(0, PIN_ANALOG_1);
+#endif
+#ifdef PIN_ANALOG_2
+        sensors.setAnalogPin(1, PIN_ANALOG_2);
+#endif
+#ifdef PIN_ANALOG_3
+        sensors.setAnalogPin(2, PIN_ANALOG_3);
+#endif
+#ifdef PIN_ANALOG_4
+        sensors.setAnalogPin(3, PIN_ANALOG_4);
+#endif
+
+#ifdef PIN_BUTTON_USER
+        sensors.setDigitalPin(0, PIN_BUTTON_USER, INPUT_PULLUP);
+#endif
+
+        _initialized = true;
+    }
+
+    const char *getBoardName() const
+    {
+#ifdef BOARD_NAME
+        return BOARD_NAME;
+#else
+        return "Generic AIoT Board";
+#endif
+    }
+
+    // Điều khiển Relay (1-indexed: relay(1, true))
+    void relay(uint8_t index, bool state)
+    {
+        if (index >= 1 && index <= 8)
+        {
+            actuators.setRelay(index - 1, state);
+        }
+    }
+
+    bool getRelay(uint8_t index) const
+    {
+        if (index >= 1 && index <= 8)
+        {
+            return actuators.getRelay(index - 1);
+        }
+        return false;
+    }
+
+    void toggleRelay(uint8_t index)
+    {
+        if (index >= 1 && index <= 8)
+        {
+            actuators.toggleRelay(index - 1);
+        }
+    }
+
+    void led(bool state) { actuators.setLed(state); }
+    void toggleLed() { actuators.toggleLed(); }
+    void buzzer(bool state) { actuators.setBuzzer(state); }
+    void beep(unsigned int ms = 100) { actuators.buzzerBeep(ms); }
+
+    int readAnalog(uint8_t index = 1) const
+    {
+        if (index >= 1 && index <= 8)
+            return sensors.readAnalog(index - 1);
+        return 0;
+    }
+
+    float readVoltage(uint8_t index = 1) const
+    {
+        if (index >= 1 && index <= 8)
+            return sensors.readAnalogVoltage(index - 1);
+        return 0.0f;
+    }
+
+    bool readButton(uint8_t index = 1) const
+    {
+        if (index >= 1 && index <= 8)
+            return sensors.readDigital(index - 1);
+        return false;
+    }
+
+    float readChipTemp() const { return SensorManager::readChipTemperature(); }
+    uint32_t readFreeRam() const { return SensorManager::readFreeRam(); }
+
+    ActuatorManager actuators;
+    SensorManager sensors;
+
+private:
+    bool _initialized;
+};
+
+extern AIoTDeviceManager AIoT_Device;
+
+#endif /* AIOT_DEVICE_HPP */
