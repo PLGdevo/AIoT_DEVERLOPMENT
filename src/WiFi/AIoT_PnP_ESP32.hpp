@@ -581,7 +581,7 @@ inline void PnP<Transport>::CONNECTED()
         }
         if (!serverMQTT.check_connect())
         {
-            LOG_ERROR("MQTT", "LOST CONNECT TO MQTT");
+            LOG_ERROR("MQTT", "LOST CONNECT TO MQTT (state=%d)", serverMQTT.getState());
             LOG_ERROR("MQTT", "TRY RECONNECT TO MQTT");
             WiFi_STATE = MODE_LOST_CONNECT_MQTT;
             delay(1000);

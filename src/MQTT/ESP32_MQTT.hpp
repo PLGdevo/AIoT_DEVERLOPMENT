@@ -23,6 +23,7 @@ public:
     void PublishData_control(const char *data);
     bool Check_mode_sub(char *topic, char *mess);
     bool check_connect();
+    int getState();
 
     void SubscribeTopic(const char *baseTopic, const char *Topic_ne);
     void UnsubscribeTopic(const char *baseTopic, const char *Topic_ne);
@@ -177,8 +178,8 @@ inline void AIoT_MQTT_ESP32<MQTT>::begin()
     server.setInsecure(); // Bỏ qua xác thực chứng chỉ CA
     mqttClient.setServer(MQTT_Server, MQTT_PORT);
     mqttClient.setBufferSize(512); // Đảm bảo buffer đủ chứa JSON telemetry
-    mqttClient.setKeepAlive(15);
-    mqttClient.setSocketTimeout(5);
+    mqttClient.setKeepAlive(60);
+    mqttClient.setSocketTimeout(15);
     mqttClient.setCallback(AIoT_Callback);
 
     char clientId[32];
@@ -207,6 +208,12 @@ inline void AIoT_MQTT_ESP32<MQTT>::begin()
     {
         LOG_ERROR("MQTT", "CONNECT TIMEOUT OR FAILED, rc=%d", mqttClient.state());
     }
+}
+
+template <class MQTT>
+inline int AIoT_MQTT_ESP32<MQTT>::getState()
+{
+    return mqttClient.state();
 }
 
 template <class MQTT>
