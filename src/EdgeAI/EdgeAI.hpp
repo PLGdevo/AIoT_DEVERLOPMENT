@@ -70,17 +70,17 @@ namespace EdgeAI
             float feat[4];
             extractFeatures(feat[0], feat[1], feat[2], feat[3]);
 
-            float logits[EdgeModels::ModelWeights::NUM_CLASSES];
+            float logits[EdgeModels::MotorVibration::NUM_CLASSES];
             AI_Math::Matrix::denseForward(
-                (const float *)EdgeModels::ModelWeights::W,
+                (const float *)EdgeModels::MotorVibration::W,
                 feat,
-                EdgeModels::ModelWeights::b,
+                EdgeModels::MotorVibration::b,
                 logits,
-                EdgeModels::ModelWeights::NUM_CLASSES,
-                EdgeModels::ModelWeights::NUM_INPUTS);
+                EdgeModels::MotorVibration::NUM_CLASSES,
+                EdgeModels::MotorVibration::NUM_INPUTS);
 
-            AI_Math::Activations::softmax(logits, EdgeModels::ModelWeights::NUM_CLASSES);
-            size_t bestClass = AI_Math::Activations::argmax(logits, EdgeModels::ModelWeights::NUM_CLASSES);
+            AI_Math::Activations::softmax(logits, EdgeModels::MotorVibration::NUM_CLASSES);
+            size_t bestClass = AI_Math::Activations::argmax(logits, EdgeModels::MotorVibration::NUM_CLASSES);
             confidenceOut = logits[bestClass];
             return (int)bestClass;
         }
