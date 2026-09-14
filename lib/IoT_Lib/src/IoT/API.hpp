@@ -378,7 +378,6 @@ void API::Set_control(const char *control)
 const char *API::WriteControl(const char *key, const Param value)
 {
     if (!control_root)
-        return nullptr;
     {
         control_root = cJSON_CreateObject();
         char macStr[18];
@@ -389,7 +388,6 @@ const char *API::WriteControl(const char *key, const Param value)
 
     cJSON *ObjectData = cJSON_GetObjectItem(control_root, "data");
     if (!ObjectData)
-        return nullptr;
     {
         ObjectData = cJSON_CreateObject();
         cJSON_AddItemToObject(control_root, "data", ObjectData);
@@ -407,7 +405,6 @@ const char *API::WriteControl(const char *key, const Param value)
     {
         char buf[16];
         snprintf(buf, sizeof(buf), "%.2f", value.getFloat());
-        newItem = cJSON_CreateRaw(buf); // giữ dạng number
         newItem = cJSON_CreateRaw(buf);
         break;
     }
@@ -416,7 +413,6 @@ const char *API::WriteControl(const char *key, const Param value)
     {
         char buf[16];
         snprintf(buf, sizeof(buf), "%.2f", value.getDouble());
-        newItem = cJSON_CreateRaw(buf); // giữ dạng number
         newItem = cJSON_CreateRaw(buf);
         break;
     }
@@ -443,7 +439,6 @@ const char *API::WriteControl(const char *key, const Param value)
     else
         cJSON_AddItemToObject(ObjectData, key, newItem);
 
-    static char buffer[256];
     static char buffer[512];
 
     if (cJSON_PrintPreallocated(control_root, buffer, sizeof(buffer), 0))
@@ -452,7 +447,6 @@ const char *API::WriteControl(const char *key, const Param value)
     }
     else
     {
-
         LOG_ERROR("CONTROL", "Buffer too small!");
         return nullptr;
     }
@@ -461,7 +455,6 @@ const char *API::WriteControl(const char *key, const Param value)
 const char *API::WriteTelemetry(const char *key, const Param value)
 {
     if (!telemetry_root)
-        return nullptr;
     {
         telemetry_root = cJSON_CreateObject();
         char macStr[18];
@@ -472,7 +465,6 @@ const char *API::WriteTelemetry(const char *key, const Param value)
 
     cJSON *ObjectData = cJSON_GetObjectItem(telemetry_root, "data");
     if (!ObjectData)
-        return nullptr;
     {
         ObjectData = cJSON_CreateObject();
         cJSON_AddItemToObject(telemetry_root, "data", ObjectData);
@@ -490,7 +482,6 @@ const char *API::WriteTelemetry(const char *key, const Param value)
     {
         char buf[16];
         snprintf(buf, sizeof(buf), "%.2f", value.getFloat());
-        newItem = cJSON_CreateRaw(buf); // giữ dạng number
         newItem = cJSON_CreateRaw(buf);
         break;
     }
@@ -499,7 +490,6 @@ const char *API::WriteTelemetry(const char *key, const Param value)
     {
         char buf[16];
         snprintf(buf, sizeof(buf), "%.2f", value.getDouble());
-        newItem = cJSON_CreateRaw(buf); // giữ dạng number
         newItem = cJSON_CreateRaw(buf);
         break;
     }
@@ -526,12 +516,10 @@ const char *API::WriteTelemetry(const char *key, const Param value)
     else
         cJSON_AddItemToObject(ObjectData, key, newItem);
 
-    static char buffer[256];
     static char buffer[512];
 
     if (cJSON_PrintPreallocated(telemetry_root, buffer, sizeof(buffer), 0))
     {
-        LOG_DEBUG("TELEMETRY", "%s", buffer);
         return buffer;
     }
     else
