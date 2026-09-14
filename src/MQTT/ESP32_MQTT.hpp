@@ -102,6 +102,8 @@ inline void AIoT_MQTT_ESP32<MQTT>::PublishData_tele(const char *data)
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_TELEMETRY_TOPIC);
     bool ok = mqttClient.publish(NameTopic, data);
     LOG_MQTT("TELEMETRY", "PUBLISH -> [%s]: %s (status: %s)", NameTopic, data, ok ? "OK" : "FAIL");
+    mqttClient.loop();
+    delay(20);
 }
 template <class MQTT>
 inline void AIoT_MQTT_ESP32<MQTT>::PublishData_control(const char *data)
@@ -116,6 +118,8 @@ inline void AIoT_MQTT_ESP32<MQTT>::PublishData_control(const char *data)
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_CONTROL_TOPIC);
     bool ok = mqttClient.publish(NameTopic, data);
     LOG_MQTT("CONTROL", "PUBLISH -> [%s]: %s (status: %s)", NameTopic, data, ok ? "OK" : "FAIL");
+    mqttClient.loop();
+    delay(20);
 }
 
 template <class MQTT>
@@ -146,8 +150,8 @@ template <class MQTT>
 inline void AIoT_MQTT_ESP32<MQTT>::disconnect()
 {
     snprintf(MQTT_BASE_TOPIC, sizeof(MQTT_BASE_TOPIC), "%s%s", BASE_TOPIC, _mac);
-    this->UnsubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_TELEMETRY_TOPIC);
     this->UnsubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_CONTROL_TOPIC);
+    mqttClient.disconnect();
     delay(100);
 }
 
@@ -190,7 +194,7 @@ inline void AIoT_MQTT_ESP32<MQTT>::begin()
         if (connected)
         {
             snprintf(MQTT_BASE_TOPIC, sizeof(MQTT_BASE_TOPIC), "%s%s", BASE_TOPIC, _mac);
-            this->SubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_TELEMETRY_TOPIC);
+            // ESP32 chỉ subscribe topic control để nhận lệnh từ Cloud (không tự subscribe telemetry để tránh echo loop)
             this->SubscribeTopic(MQTT_BASE_TOPIC, SUB_PREFIX_CONTROL_TOPIC);
             LOG_MQTT("MQTT", "CONNECTED TO HIVEMQ CLOUD SUCCESSFULLY!");
             return;
