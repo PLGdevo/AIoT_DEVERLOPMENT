@@ -1,5 +1,9 @@
 #include <Arduino.h>
+
+#ifndef DEBUG_COLOR
 #define DEBUG_COLOR
+#endif
+
 #include <AIoT.h>
 
 const char *WIFI_SSID = "YOUR_WIFI_SSID";
@@ -34,4 +38,3 @@ void loop()
 {
     AIoT.run();
 }
-

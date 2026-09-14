@@ -1,7 +1,12 @@
 #include <Arduino.h>
 
+#ifndef DEBUG_COLOR
 #define DEBUG_COLOR
+#endif
+
+#ifndef BUTTON_CONFIG
 #define BUTTON_CONFIG
+#endif
 
 #include <AIoT.h>
 

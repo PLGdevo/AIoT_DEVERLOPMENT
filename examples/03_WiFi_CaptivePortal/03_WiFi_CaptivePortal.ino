@@ -1,6 +1,13 @@
 #include <Arduino.h>
+
+#ifndef DEBUG_COLOR
 #define DEBUG_COLOR
+#endif
+
+#ifndef BUTTON_CONFIG
 #define BUTTON_CONFIG // Bật chế độ cấu hình Captive Portal AP qua nút bấm
+#endif
+
 #include <AIoT.h>
 
 void setup()
@@ -16,4 +23,3 @@ void loop()
 {
     AIoT.run();
 }
-

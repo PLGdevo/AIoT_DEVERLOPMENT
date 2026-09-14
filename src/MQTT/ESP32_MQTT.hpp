@@ -92,6 +92,12 @@ inline void AIoT_MQTT_ESP32<MQTT>::UnpublishTopic(const char *baseTopic, const c
 template <class MQTT>
 inline void AIoT_MQTT_ESP32<MQTT>::PublishData_tele(const char *data)
 {
+    if (_mac[0] == '\0')
+    {
+        String MAC = WiFi.macAddress();
+        strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
+        _mac[sizeof(_mac) - 1] = '\0';
+    }
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_TELEMETRY_TOPIC);
     bool ok = mqttClient.publish(NameTopic, data);
@@ -100,6 +106,12 @@ inline void AIoT_MQTT_ESP32<MQTT>::PublishData_tele(const char *data)
 template <class MQTT>
 inline void AIoT_MQTT_ESP32<MQTT>::PublishData_control(const char *data)
 {
+    if (_mac[0] == '\0')
+    {
+        String MAC = WiFi.macAddress();
+        strncpy(_mac, MAC.c_str(), sizeof(_mac) - 1);
+        _mac[sizeof(_mac) - 1] = '\0';
+    }
     char NameTopic[128];
     snprintf(NameTopic, sizeof(NameTopic), "%s%s/%s", BASE_TOPIC, _mac, PUB_PREFIX_CONTROL_TOPIC);
     bool ok = mqttClient.publish(NameTopic, data);
