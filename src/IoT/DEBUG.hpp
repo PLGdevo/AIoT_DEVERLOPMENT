@@ -79,7 +79,7 @@ static inline const char *FileName(const char *path)
 // BASE LOG
 //======================================================
 
-#if defined(DEBUG) || defined(DEBUG_COLOR)
+#if defined(DEBUG_COLOR) || defined(AIOT_DEBUG)
 
 #define LOG_BASE(headColor, msgColor, level, tag, format, ...) \
     do                                                         \
@@ -107,7 +107,7 @@ static inline const char *FileName(const char *path)
 
 #else
 
-#define LOG_BASE(...)
+#define LOG_BASE(...) do {} while (0)
 
 #endif
 
