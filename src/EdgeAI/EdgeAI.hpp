@@ -66,9 +66,16 @@ namespace EdgeAI
 
         // Chạy suy luận mạng nơ-ron Dense Layer phân loại động cơ
         int predictMotorState(float &confidenceOut) const
+        // Suy luận mô hình nơ-ron tổng quát: Cho phép nạp bất kỳ ma trận trọng số W, b của người dùng
+        int predict(const float *features, const float *W, const float *b, size_t numClasses, size_t numFeatures, float &confidenceOut) const
         {
             float feat[4];
             extractFeatures(feat[0], feat[1], feat[2], feat[3]);
+            if (numClasses == 0 || numFeatures == 0 || W == nullptr || b == nullptr || features == nullptr)
+            {
+                confidenceOut = 0.0f;
+                return -1;
+            }
 
             float logits[EdgeModels::MotorVibration::NUM_CLASSES];
             AI_Math::Matrix::denseForward(
@@ -78,11 +85,24 @@ namespace EdgeAI
                 logits,
                 EdgeModels::MotorVibration::NUM_CLASSES,
                 EdgeModels::MotorVibration::NUM_INPUTS);
+            float logits[16];
+            size_t classes = (numClasses > 16) ? 16 : numClasses;
 
             AI_Math::Activations::softmax(logits, EdgeModels::MotorVibration::NUM_CLASSES);
             size_t bestClass = AI_Math::Activations::argmax(logits, EdgeModels::MotorVibration::NUM_CLASSES);
+            AI_Math::Matrix::denseForward(W, features, b, logits, classes, numFeatures);
+            AI_Math::Activations::softmax(logits, classes);
+            size_t bestClass = AI_Math::Activations::argmax(logits, classes);
             confidenceOut = logits[bestClass];
             return (int)bestClass;
+        }
+
+        // Suy luận với các đặc trưng tự động trích xuất từ cửa sổ trượt
+        int predict(const float *W, const float *b, size_t numClasses, size_t numFeatures, float &confidenceOut) const
+        {
+            float feat[4];
+            extractFeatures(feat[0], feat[1], feat[2], feat[3]);
+            return predict(feat, W, b, numClasses, (numFeatures < 4) ? numFeatures : 4, confidenceOut);
         }
 
         AnomalyDetector &getDetector() { return _detector; }
