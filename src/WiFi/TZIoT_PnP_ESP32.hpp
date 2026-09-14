@@ -1,6 +1,7 @@
 #ifndef IoT_PnP_ESP32
 #define IoT_PnP_ESP32
 #include <Arduino.h>
+#include <WiFi.h>
 #include <WiFiClient.h>
 #include <DNSServer.h>
 #include <WebServer.h>
