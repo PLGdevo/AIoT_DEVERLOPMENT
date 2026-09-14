@@ -543,16 +543,19 @@ inline void PnP<Transport>::CONFIG_MQTT()
     }
     if (serverMQTT.check_connect())
     {
-        LOG_WIFI("WIFI",
-                 "\r\n"
-                 " █████╗ ██╗ ██████╗ ████████╗\r\n"
-                 "██╔══██╗██║██╔═══██╗╚══██╔══╝\r\n"
-                 "███████║██║██║   ██║   ██║   \r\n"
-                 "██╔══██║██║██║   ██║   ██║   \r\n"
-                 "██║  ██║██║╚██████╔╝   ██║   \r\n"
-                 "╚═╝  ╚═╝╚═╝ ╚═════╝    ╚═╝   \r\n"
-                 "  AIoT Firmware v1.0.0\r\n"
-                 "  ESP32 AIoT Controller\r\n");
+        if (Serial)
+        {
+            Serial.print(
+                "\r\n"
+                " █████╗ ██╗ ██████╗ ████████╗\r\n"
+                "██╔══██╗██║██╔═══██╗╚══██╔══╝\r\n"
+                "███████║██║██║   ██║   ██║   \r\n"
+                "██╔══██║██║██║   ██║   ██║   \r\n"
+                "██║  ██║██║╚██████╔╝   ██║   \r\n"
+                "╚═╝  ╚═╝╚═╝ ╚═════╝    ╚═╝   \r\n"
+                "  AIoT Firmware v1.0.0\r\n"
+                "  ESP32 AIoT Controller\r\n\r\n");
+        }
         SaveMQTT(mqttusername, mqttpass);
         WiFi_STATE = MODE_CONNECTED;
         delay(1000);
