@@ -20,7 +20,7 @@ MQTT_USER = "IoT_TEST"
 MQTT_PASS = "mt21062005"
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-3.6-flash")
 
 def on_connect(client, userdata, flags, rc):
     print(f"✅ Đã kết nối HiveMQ Cloud Broker (RC: {rc})")
