@@ -6,7 +6,7 @@
 class ActuatorManager
 {
 public:
-    ActuatorManager() : _buzzerPin(-1), _ledPin(-1)
+    ActuatorManager() : _buzzerPin(-1), _ledPin(-1), _rgbPin(-1)
     {
         for (int i = 0; i < 8; i++)
         {
@@ -14,6 +14,20 @@ public:
             _relayStates[i] = false;
         }
     }
+
+    void setRgbPin(int pin)
+    {
+        _rgbPin = pin;
+        if (_rgbPin >= 0)
+        {
+            pinMode(_rgbPin, OUTPUT);
+#if defined(ESP32)
+            neopixelWrite(_rgbPin, 0, 0, 0); // Tắt ban đầu
+#endif
+        }
+    }
+
+    int getRgbPin() const { return _rgbPin; }
 
     void setLedPin(int pin)
     {
@@ -110,6 +124,7 @@ public:
 private:
     int _ledPin;
     int _buzzerPin;
+    int _rgbPin;
     int _relayPins[8];
     bool _relayStates[8];
 };

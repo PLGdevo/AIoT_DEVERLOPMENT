@@ -31,6 +31,12 @@ public:
         actuators.setLedPin(PIN_STATUS_LED);
 #endif
 
+#ifdef PIN_RGB_LED
+        actuators.setRgbPin(PIN_RGB_LED);
+#elif defined(RGB_BUILTIN)
+        actuators.setRgbPin(RGB_BUILTIN);
+#endif
+
 #ifdef PIN_BUZZER
         actuators.setBuzzerPin(PIN_BUZZER);
 #endif
@@ -77,6 +83,26 @@ public:
 #endif
     }
 
+    // --- Cấu hình phần cứng linh hoạt tại runtime ---
+    void setRgbPin(int pin) { actuators.setRgbPin(pin); }
+    void setLedPin(int pin) { actuators.setLedPin(pin); }
+    void setBuzzerPin(int pin) { actuators.setBuzzerPin(pin); }
+    void setRelayPin(uint8_t index, int pin)
+    {
+        if (index >= 1 && index <= 8)
+            actuators.setRelayPin(index - 1, pin);
+    }
+    void setAnalogPin(uint8_t index, int pin)
+    {
+        if (index >= 1 && index <= 8)
+            sensors.setAnalogPin(index - 1, pin);
+    }
+    void setDigitalPin(uint8_t index, int pin, int mode = INPUT)
+    {
+        if (index >= 1 && index <= 8)
+            sensors.setDigitalPin(index - 1, pin, mode);
+    }
+
     // Điều khiển Relay (1-indexed: relay(1, true))
     void relay(uint8_t index, bool state)
     {
@@ -106,25 +132,26 @@ public:
     void led(bool state)
     {
         actuators.setLed(state);
-#ifdef PIN_RGB_LED
-        if (state)
-            neopixelWrite(PIN_RGB_LED, 64, 64, 64);
-        else
-            neopixelWrite(PIN_RGB_LED, 0, 0, 0);
-#elif defined(RGB_BUILTIN)
-        if (state)
-            neopixelWrite(RGB_BUILTIN, 64, 64, 64);
-        else
-            neopixelWrite(RGB_BUILTIN, 0, 0, 0);
+#if defined(ESP32)
+        int rgbPin = actuators.getRgbPin();
+        if (rgbPin >= 0)
+        {
+            if (state)
+                neopixelWrite(rgbPin, 64, 64, 64);
+            else
+                neopixelWrite(rgbPin, 0, 0, 0);
+        }
 #endif
     }
 
     void rgb(uint8_t r, uint8_t g, uint8_t b)
     {
-#ifdef PIN_RGB_LED
-        neopixelWrite(PIN_RGB_LED, r, g, b);
-#elif defined(RGB_BUILTIN)
-        neopixelWrite(RGB_BUILTIN, r, g, b);
+#if defined(ESP32)
+        int rgbPin = actuators.getRgbPin();
+        if (rgbPin >= 0)
+        {
+            neopixelWrite(rgbPin, r, g, b);
+        }
 #endif
     }
 
