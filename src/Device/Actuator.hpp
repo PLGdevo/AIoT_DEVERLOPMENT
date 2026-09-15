@@ -3,6 +3,10 @@
 
 #include <Arduino.h>
 
+#if defined(ESP32)
+#include "driver/rmt.h"
+#endif
+
 class ActuatorManager
 {
 public:
@@ -20,8 +24,8 @@ public:
         _rgbPin = pin;
         if (_rgbPin >= 0)
         {
-            pinMode(_rgbPin, OUTPUT);
 #if defined(ESP32)
+            rmt_set_gpio((rmt_channel_t)0, RMT_MODE_TX, (gpio_num_t)_rgbPin, false);
             neopixelWrite(_rgbPin, 0, 0, 0); // Tắt ban đầu
 #endif
         }

@@ -7,6 +7,29 @@
 #include <EdgeAI/EdgeAI.h>
 #include <CloudAI/CloudAI.h>
 
+// --- Hybrid AI v2 Architecture: Types, Policy, Orchestrator ---
+#include "Types.hpp"
+#include "PolicyEngine.hpp"
+#include "AIOrchestrator.hpp"
+
+namespace HybridAI {
+
+class Engine {
+public:
+    explicit Engine(const PolicyConfig& config = PolicyConfig{})
+        : _orchestrator(config) {}
+
+    AIResult process(const AIInput& input) const {
+        return _orchestrator.route(input);
+    }
+
+private:
+    AIOrchestrator _orchestrator;
+};
+
+} // namespace HybridAI
+
+// --- Classic HybridAIEngine (Đảm bảo 100% tương thích ngược với main.cpp và các example) ---
 class HybridAIEngine
 {
 public:
@@ -44,10 +67,10 @@ public:
 
     EdgeAI::Engine edge;
     CloudAI::GeminiClient gemini;
+    HybridAI::Engine orchestrator;
 
 private:
     bool _autoEmergencyActuation;
 };
 
 #endif /* HYBRID_AI_HPP */
-

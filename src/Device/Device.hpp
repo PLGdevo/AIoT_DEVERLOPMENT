@@ -133,14 +133,10 @@ public:
     {
         actuators.setLed(state);
 #if defined(ESP32)
-        int rgbPin = actuators.getRgbPin();
-        if (rgbPin >= 0)
-        {
-            if (state)
-                neopixelWrite(rgbPin, 64, 64, 64);
-            else
-                neopixelWrite(rgbPin, 0, 0, 0);
-        }
+        if (state)
+            rgb(64, 64, 64);
+        else
+            rgb(0, 0, 0);
 #endif
     }
 
@@ -150,8 +146,26 @@ public:
         int rgbPin = actuators.getRgbPin();
         if (rgbPin >= 0)
         {
+            rmt_set_gpio((rmt_channel_t)0, RMT_MODE_TX, (gpio_num_t)rgbPin, false);
             neopixelWrite(rgbPin, r, g, b);
         }
+
+#if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(BOARD_ESP32_S3_KIT)
+        // ESP32-S3 DevKit có 2 phiên bản chân RGB onboard phổ biến: Rev 1.0 (GPIO 48) và Rev 1.1 (GPIO 38).
+        // Tự động phát xung ra cả 2 chân để đảm bảo 100% board nào cũng sáng đèn!
+        if (rgbPin == 48)
+        {
+            rmt_set_gpio((rmt_channel_t)0, RMT_MODE_TX, (gpio_num_t)38, false);
+            neopixelWrite(38, r, g, b);
+            rmt_set_gpio((rmt_channel_t)0, RMT_MODE_TX, (gpio_num_t)48, false);
+        }
+        else if (rgbPin == 38)
+        {
+            rmt_set_gpio((rmt_channel_t)0, RMT_MODE_TX, (gpio_num_t)48, false);
+            neopixelWrite(48, r, g, b);
+            rmt_set_gpio((rmt_channel_t)0, RMT_MODE_TX, (gpio_num_t)38, false);
+        }
+#endif
 #endif
     }
 
