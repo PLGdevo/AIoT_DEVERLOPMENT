@@ -13,6 +13,7 @@
 #define BOARD_AIOT_INDUSTRIAL
 #include <AIoT.h>
 #include <HybridAI/HybridAI.h>
+#include <EdgeAI/Models/MotorVibrationModel.h>
 
 const char *WIFI_SSID = "YOUR_WIFI_SSID";
 const char *WIFI_PASS = "YOUR_WIFI_PASS";
@@ -41,7 +42,11 @@ void sendHybridTelemetry()
     hybridAI.edge.extractFeatures(meanVal, rmsVal, p2pVal, stdDevVal);
 
     float confidence = 0.0f;
-    int motorState = hybridAI.edge.predictMotorState(confidence);
+    int motorState = hybridAI.edge.predict((const float *)EdgeModels::MotorVibration::W,
+                                           EdgeModels::MotorVibration::b,
+                                           EdgeModels::MotorVibration::NUM_CLASSES,
+                                           EdgeModels::MotorVibration::NUM_INPUTS,
+                                           confidence);
 
     AIoT.updateTelemetry("chip_temp", AIoT_Device.readChipTemp());
     AIoT.updateTelemetry("free_ram", (int)AIoT_Device.readFreeRam());
