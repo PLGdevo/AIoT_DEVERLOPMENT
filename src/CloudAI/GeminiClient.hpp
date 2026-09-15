@@ -11,7 +11,7 @@ namespace CloudAI
     class GeminiClient
     {
     public:
-        GeminiClient(const char *apiKey = "", const char *model = "gemini-3.6-flash")
+        GeminiClient(const char *apiKey = "", const char *model = "gemini-1.5-flash")
             : _model(model), _timeoutMs(15000)
         {
             setApiKey(apiKey);
@@ -129,6 +129,10 @@ namespace CloudAI
                 {
                     reply = "[Error]: Không trích xuất được phản hồi văn bản từ Gemini.";
                 }
+            }
+            else if (httpCode == 429)
+            {
+                reply = "[Error 429]: Quota của model " + _model + " tạm hết hạn mức. Hệ thống sẽ tự động chuyển sang chế độ Edge phản hồi tại chỗ.";
             }
             else
             {
