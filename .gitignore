@@ -21,3 +21,7 @@ Thumbs.db
 # Python
 __pycache__/
 *.py[cod]
+
+# Claude Code context-management local cache (session logs, pre-compact snapshots)
+.claude/tools/context/.cache/
+.claude/settings.local.json
